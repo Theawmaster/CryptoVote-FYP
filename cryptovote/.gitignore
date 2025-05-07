@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.egg
+
+# Virtualenv
+venv/
+ENV/
+env/
+*.env
+
+# Flask / Secrets
+.env
+instance/
+config.pyc
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs and dumps
+*.log
+*.pot
+*.pyc
+
+# Coverage
+htmlcov/
+.coverage
+.tox/
+.cache/
+
+# Tests
+.pytest_cache/
+coverage.xml
+nosetests.xml
+test_*.py
