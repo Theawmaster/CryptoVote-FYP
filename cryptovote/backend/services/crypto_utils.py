@@ -1,8 +1,9 @@
+import os
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 
-def generate_rsa_key_pair():
+def generate_rsa_key_pair(save_to_disk=False):
     # Generate private key
     private_key_obj = rsa.generate_private_key(
         public_exponent=65537,
@@ -22,5 +23,16 @@ def generate_rsa_key_pair():
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
+    
+    # Save to scripts/mykey.pem
+    if save_to_disk:
+        scripts_path = os.path.join(os.path.dirname(__file__), "../../scripts")
+        os.makedirs(scripts_path, exist_ok=True)
 
-    return public_pem.decode("utf-8"), private_pem.decode("utf-8")
+        key_path = os.path.join(scripts_path, "mykey.pem")
+        with open(key_path, "wb") as f:
+            f.write(private_pem)
+
+        print(f"✅ Saved private key to {key_path}")
+
+    return private_pem.decode("utf-8"), public_pem.decode("utf-8")

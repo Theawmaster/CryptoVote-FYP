@@ -1,6 +1,7 @@
 from flask import Flask
 from models.db import db  # ✅ use from models.db
 from routes.register import register_bp
+from routes.auth import auth_bp
 from routes.login import login_bp
 from dotenv import load_dotenv
 
@@ -11,6 +12,7 @@ app.config.from_pyfile("config.py")
 
 db.init_app(app)
 app.register_blueprint(register_bp, url_prefix='/register')
+app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(login_bp)
 
 with app.app_context():
