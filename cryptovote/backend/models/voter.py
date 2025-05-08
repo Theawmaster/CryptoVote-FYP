@@ -6,5 +6,6 @@ class Voter(db.Model):
     public_key = db.Column(db.Text, nullable=True)
     verification_token = db.Column(db.String(128), nullable=True)
     is_verified = db.Column(db.Boolean, default=False)
+    is_signed = db.Column(db.Boolean, default=False)
     totp_secret = db.Column(db.String(16), nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.now())
