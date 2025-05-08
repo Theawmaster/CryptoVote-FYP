@@ -15,6 +15,7 @@ env/
 
 # Flask / Secrets
 .env
+.pem
 instance/
 config.pyc
 
@@ -44,3 +45,6 @@ htmlcov/
 coverage.xml
 nosetests.xml
 test_*.py
+
+# scripts
+*.pem
