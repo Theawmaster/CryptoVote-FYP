@@ -5,13 +5,13 @@ from models.db import db
 import hashlib
 from datetime import datetime, timedelta
 
-auth_bp = Blueprint('auth', __name__)
+auth_bp = Blueprint('login', __name__)
 
 # In-memory nonce store (email_hash → { nonce, issued_at })
 nonce_store = {}
 NONCE_TTL_SECONDS = 300  # 5 minutes
 
-@auth_bp.route('/authenticate', methods=['POST'])
+@auth_bp.route('/login', methods=['POST'])
 def authenticate():
     data = request.get_json()
     email = data.get('email')
@@ -29,7 +29,7 @@ def authenticate():
 
     # 🧩 Step 1: Requesting nonce
     if not signed_nonce:
-        if voter.is_signed:
+        if voter.logged_in:
             return jsonify({'message': 'You are already signed in.'}), 200
 
         nonce = generate_nonce()
@@ -55,9 +55,14 @@ def authenticate():
         del nonce_store[email_hash]
 
         try:
-            voter.is_signed = True
+            voter.logged_in = True
+            voter.last_login_ip = request.remote_addr
+            voter.last_login_at = datetime.utcnow()
+            print(f"💾 Logging in {email_hash} from IP {request.remote_addr} at {datetime.utcnow()}") # For Debugging
+            
             db.session.commit()
             print(f"✅ [{datetime.utcnow()}] Signature verified for {email_hash}")
+            return jsonify({'message': 'Signature verified. Login successful.'}), 200
         except Exception as e:
             db.session.rollback()
             print(f"❌ DB update failed: {e}")
