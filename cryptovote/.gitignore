@@ -45,4 +45,4 @@ htmlcov/
 coverage.xml
 nosetests.xml
 test_*.py
-
+scripts/*.pem
