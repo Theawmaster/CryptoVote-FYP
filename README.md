@@ -1,3 +1,4 @@
+
 # 🗳️ CryptoVote – Cryptographic Electronic Voting System (NTU FYP)
 
 **CryptoVote** is a cryptographic e-voting prototype developed as part of an undergraduate Final Year Project (FYP) at Nanyang Technological University (NTU), Singapore. It showcases key cryptographic principles like digital signatures, blind signatures, and homomorphic encryption applied to a simplified, privacy-preserving voting workflow.
@@ -27,6 +28,18 @@
 | 2FA             | PyOTP, qrcode                         |
 | Deployment      | Localhost / Docker / Cloud (Optional) |
 
+### 🛠️ Tools & Libraries
+
+| Purpose                | Tool/Library                      |
+|------------------------|----------------------------------|
+| Backend Framework      | Flask                            |
+| Cryptography           | pycryptodome, ecdsa              |
+| Database               | PostgreSQL                       |
+| Hashing                | hashlib (SHA-256)                |
+| Email Verification     | Flask-Mail                       |
+| 2FA                    | PyOTP, qrcode, pyqrcode          |
+| Token Generation       | itsdangerous or JWT              |
+
 ---
 
 ## 🏗️ System Architecture
@@ -37,6 +50,55 @@ The system includes:
 2. **Authentication Module** – Email domain check, digital signature, OTP-based 2FA
 3. **Backend & DB** – Secure key generation, encrypted vote storage
 4. **Audit Module** – Admin vote tally + basic cryptographic proof generation
+
+---
+
+## 🔐 Authentication Module Design
+
+### 2.2 Authentication Module
+The authentication module ensures legitimacy of voters and protects against impersonation:
+- ✅ Verifies voter identity via NTU school email domain (`@ntu.edu.sg`)
+- ✅ Employs **digital signatures** and **blind signatures** to issue credentials securely
+- ✅ Implements **2FA** using TOTP (e.g., Google Authenticator)
+- ✅ (Planned) Support for **ZKP** proofs in future phases
+
+### 🔧 Phase 3 Development Plan
+
+#### 🗓️ Weeks 10–11: Voter Registration Setup
+**Objective:** Enable only valid users (e.g., NTU students) to register securely.
+
+**Tasks:**
+- Setup PostgreSQL/MySQL database for storing voter metadata
+- Create Flask/Django API endpoints:
+  - `/register` – Accepts school email, sends verification token
+  - `/verify-email` – Confirms registration via token link
+- Validate NTU email domain (e.g., ends with @ntu.edu.sg)
+- Generate asymmetric key pair (RSA/ECDSA) per voter
+- Store public key and hashed email in DB (SHA-256)
+- Create test suite to verify voter registration flow
+
+**Backend Flow:**
+- User registers with email
+- Backend checks domain + generates token
+- On confirmation → public/private keypair created
+- Public key stored; private key kept client-side only
+
+#### 🗓️ Weeks 12–13: 2FA and Authentication
+**Objective:** Ensure tamper-proof login and secure session for vote casting
+
+**Tasks:**
+- Implement TOTP (Time-Based OTP) with PyOTP
+- Add `/login`, `/2fa-verify`, `/logged_in` endpoints
+- Use challenge-response digital signature login:
+  - Server sends nonce → Voter signs → Server verifies
+- Log login IP + timestamp (optional)
+
+**Backend Flow:**
+- Voter enters email
+- Server sends nonce
+- Voter signs nonce with private key → sends back
+- Server verifies → prompts OTP
+- TOTP verified → session allowed
 
 ---
 
@@ -52,9 +114,15 @@ pip install -r requirements.txt
 python app.py
 ```
 
+### Run Test Suite
+```bash
+pytest --cov=backend backend/tests/ -v
+```
+> 💡 Tip: Use `pytest-html` to generate test reports for better visualization.
+
 ---
 
-## 🔐 Authentication & Voting Flow (Testing with Postman)
+## 🧪 Authentication & Voting Flow (Testing with Postman)
 
 ### 🧾 Phase 1: Voter Registration
 **POST** `/register`
@@ -69,7 +137,7 @@ Expected: Returns `private_key` + verification token
 **GET** `/register/verify-email?token=<token>`
 Expected: Returns `totp_uri`
 - Run `preview_qr.py` with the URI
-- Scan with Google Authenticator
+- Scan using Google Authenticator
 
 ### 🧾 Phase 3: Login (Nonce-Based Digital Signature)
 1. **POST** `/login` → returns `nonce`
@@ -105,7 +173,5 @@ SELECT id, email_hash, is_verified, logged_in, vote_status, has_votted,
 FROM voter
 ORDER BY id ASC;
 ```
-
----
 
 For advanced cryptographic components like vote encryption and blind signing, see `/services/crypto_utils.py` and `/routes/vote.py` (to be implemented in next phases).
