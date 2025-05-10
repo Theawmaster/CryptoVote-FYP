@@ -21,10 +21,10 @@
 | Component       | Technologies                          |
 |----------------|---------------------------------------|
 | Frontend        | React.js / Vue.js                     |
-| Backend         | Python (Flask or Django)              |
+| Backend         | Python (Flask)                        |
 | Cryptography    | PyCryptodome, PyOTP, phe (Paillier)   |
 | Database        | PostgreSQL / MySQL + SHA-256 hashing  |
-| Email Services  | Flask-Mail / Django Email             |
+| Email Services  | Flask-Mail                             |
 | 2FA             | PyOTP, qrcode                         |
 | Deployment      | Localhost / Docker / Cloud (Optional) |
 
@@ -55,16 +55,16 @@ The system includes:
 
 ## 🔐 Authentication Module Design
 
-### 2.2 Authentication Module
+### Authentication Module
 The authentication module ensures legitimacy of voters and protects against impersonation:
 - ✅ Verifies voter identity via NTU school email domain (`@ntu.edu.sg`)
 - ✅ Employs **digital signatures** and **blind signatures** to issue credentials securely
 - ✅ Implements **2FA** using TOTP (e.g., Google Authenticator)
 - ✅ (Planned) Support for **ZKP** proofs in future phases
 
-### 🔧 Phase 3 Development Plan
+### 🔧  Development Plan
 
-#### 🗓️ Weeks 10–11: Voter Registration Setup
+#### Voter Registration Setup
 **Objective:** Enable only valid users (e.g., NTU students) to register securely.
 
 **Tasks:**
@@ -83,7 +83,7 @@ The authentication module ensures legitimacy of voters and protects against impe
 - On confirmation → public/private keypair created
 - Public key stored; private key kept client-side only
 
-#### 🗓️ Weeks 12–13: 2FA and Authentication
+#### 2FA and Authentication
 **Objective:** Ensure tamper-proof login and secure session for vote casting
 
 **Tasks:**
@@ -124,7 +124,7 @@ pytest --cov=backend backend/tests/ -v
 
 ## 🧪 Authentication & Voting Flow (Testing with Postman)
 
-### 🧾 Phase 1: Voter Registration
+### Voter Registration
 **POST** `/register`
 ```json
 {
@@ -133,19 +133,19 @@ pytest --cov=backend backend/tests/ -v
 ```
 Expected: Returns `private_key` + verification token
 
-### 🧾 Phase 2: Email Verification
+### Email Verification
 **GET** `/register/verify-email?token=<token>`
 Expected: Returns `totp_uri`
 - Run `preview_qr.py` with the URI
 - Scan using Google Authenticator
 
-### 🧾 Phase 3: Login (Nonce-Based Digital Signature)
+### Login (Nonce-Based Digital Signature)
 1. **POST** `/login` → returns `nonce`
 2. Run `sign_nonce.py` with private key and nonce
 3. **POST** `/login` with `signed_nonce`
 Expected: Signature verified, login successful
 
-### 🧾 Phase 4: 2FA Verification
+### 2FA Verification
 **POST** `/2fa-verify`
 ```json
 {
@@ -155,7 +155,7 @@ Expected: Signature verified, login successful
 ```
 Expected: `vote_status = true`, 2FA success
 
-### 🧾 Phase 5: Logout
+### Logout
 **POST** `/logout`
 ```json
 {
