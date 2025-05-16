@@ -26,7 +26,7 @@ def verify_2fa():
     from datetime import timedelta
     now = datetime.utcnow()
     last_attempt = otp_cooldown.get(email_hash)
-    if last_attempt and (now - last_attempt) < timedelta(seconds=10):
+    if last_attempt and (now - last_attempt) < timedelta(seconds=10): # Cooldown is 10 seconds
         return jsonify({'error': 'Too many attempts. Please wait.'}), 429
 
     totp = pyotp.TOTP(voter.totp_secret)

@@ -1,18 +1,16 @@
 from flask import Blueprint, request, jsonify
-from services.registration_service import generate_nonce, verify_voter_signature
+from services.auth_service import (
+    get_email_hash, request_nonce, validate_nonce, clear_nonce
+)
+from services.registration_service import verify_voter_signature
 from models.voter import Voter
 from models.db import db
-import hashlib
-from datetime import datetime, timedelta
+from datetime import datetime
 
 auth_bp = Blueprint('login', __name__)
 
-# In-memory nonce store (email_hash → { nonce, issued_at })
-nonce_store = {}
-NONCE_TTL_SECONDS = 300  # 5 minutes
-
 @auth_bp.route('/login', methods=['POST'])
-def authenticate():
+def login():
     data = request.get_json()
     email = data.get('email')
     signed_nonce = data.get('signed_nonce')
@@ -20,55 +18,38 @@ def authenticate():
     if not email:
         return jsonify({'error': 'Email is required'}), 400
 
-    email_hash = hashlib.sha256(email.encode()).hexdigest()
-
-    # 🔍 Check if voter exists
+    email_hash = get_email_hash(email)
     voter = Voter.query.filter_by(email_hash=email_hash).first()
+
     if not voter or not voter.is_verified:
         return jsonify({'error': 'Unverified or unknown voter.'}), 403
 
-    # 🧩 Step 1: Requesting nonce
     if not signed_nonce:
         if voter.logged_in:
             return jsonify({'message': 'You are already signed in.'}), 200
 
-        nonce = generate_nonce()
-        nonce_store[email_hash] = {
-            'nonce': nonce,
-            'issued_at': datetime.utcnow()
-        }
+        nonce = request_nonce(email_hash)
         return jsonify({'nonce': nonce})
 
-    # 🧩 Step 2: Verifying signed nonce
-    record = nonce_store.get(email_hash)
-    if not record:
-        return jsonify({'error': 'Nonce not found or expired'}), 400
+    # Step 2: Validate and verify
+    nonce, error = validate_nonce(email_hash)
+    if error:
+        return jsonify({'error': error}), 403
 
-    if datetime.utcnow() - record['issued_at'] > timedelta(seconds=NONCE_TTL_SECONDS):
-        del nonce_store[email_hash]
-        return jsonify({'error': 'Nonce expired. Please retry authentication.'}), 403
-
-    nonce = record['nonce']
     success, msg = verify_voter_signature(email, signed_nonce, nonce)
-
-    if success:
-        del nonce_store[email_hash]
-
-        try:
-            voter.logged_in = True
-            voter.last_login_ip = request.remote_addr
-            voter.last_login_at = datetime.utcnow()
-            print(f"💾 Logging in {email_hash} from IP {request.remote_addr} at {datetime.utcnow()}") # For Debugging
-            
-            db.session.commit()
-            print(f"✅ [{datetime.utcnow()}] Signature verified for {email_hash}")
-            return jsonify({'message': 'Signature verified. Login successful.'}), 200
-        except Exception as e:
-            db.session.rollback()
-            print(f"❌ DB update failed: {e}")
-            return jsonify({'error': 'Verified but failed to update signature state.'}), 500
-
-        return jsonify({'message': msg}), 200
-
-    else:
+    if not success:
         return jsonify({'error': msg}), 401
+
+    clear_nonce(email_hash)
+
+    try:
+        voter.logged_in = True
+        voter.last_login_ip = request.remote_addr
+        voter.last_login_at = datetime.utcnow()
+        db.session.commit()
+        print(f"✅ [{datetime.utcnow()}] Login successful for {email_hash}")
+        return jsonify({'message': 'Signature verified. Login successful.'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ DB update failed: {e}")
+        return jsonify({'error': 'Verified but failed to update signature state.'}), 500
