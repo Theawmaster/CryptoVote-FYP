@@ -12,4 +12,5 @@ class Voter(db.Model):
     last_login_at = db.Column(db.DateTime, nullable=True)
     last_2fa_at = db.Column(db.DateTime, nullable=True)
     vote_status = db.Column(db.Boolean, default=False)
+    has_token = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=db.func.now())

@@ -9,13 +9,13 @@ def generate_paillier_keypair():
     public_key, private_key = paillier.generate_paillier_keypair()
 
     # Save public key
-    with open(os.path.join(KEYS_DIR, 'public_key.json'), 'w') as f:
+    with open(os.path.join(KEYS_DIR, 'paillier_public_key.json'), 'w') as f:
         json.dump({
             'n': public_key.n
         }, f)
 
     # Save private key
-    with open(os.path.join(KEYS_DIR, 'private_key.json'), 'w') as f:
+    with open(os.path.join(KEYS_DIR, 'paillier_private_key.json'), 'w') as f:
         json.dump({
             'p': private_key.p,
             'q': private_key.q,
