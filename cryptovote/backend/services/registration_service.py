@@ -3,9 +3,10 @@ from flask import jsonify
 from models.voter import Voter
 from models.db import db
 from services.email_service import send_verification_email
-from services.crypto_utils import generate_rsa_key_pair
+from utilities.crypto_utils import generate_rsa_key_pair
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
+
 
 def handle_registration(email: str):
     if not email.endswith("@e.ntu.edu.sg"):

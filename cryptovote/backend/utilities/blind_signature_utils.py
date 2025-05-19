@@ -4,6 +4,7 @@ from Crypto.Util.number import inverse
 from Crypto.Hash import SHA256
 import os
 
+
 # RSA key file paths
 KEY_DIR = os.path.join(os.path.dirname(__file__), '../../keys/')
 PRIVATE_KEY_PATH = os.path.join(KEY_DIR, 'rsa_private.pem')

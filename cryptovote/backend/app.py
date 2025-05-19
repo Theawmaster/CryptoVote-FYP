@@ -7,6 +7,7 @@ from routes.logout import logout_bp
 from routes.cast_vote import cast_vote_bp
 from routes.blind_sign import blind_sign_bp
 from dotenv import load_dotenv
+from flask import Flask
 
 load_dotenv()
 

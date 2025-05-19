@@ -24,9 +24,9 @@ def generate_rsa_key_pair(save_to_disk=False):
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
     
-    # Save to scripts/mykey.pem
+    # Save to keys/mykey.pem
     if save_to_disk:
-        scripts_path = os.path.join(os.path.dirname(__file__), "../../scripts")
+        scripts_path = os.path.join(os.path.dirname(__file__), "../../keys")
         os.makedirs(scripts_path, exist_ok=True)
 
         key_path = os.path.join(scripts_path, "mykey.pem")

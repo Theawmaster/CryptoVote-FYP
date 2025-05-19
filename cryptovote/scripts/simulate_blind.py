@@ -1,7 +1,7 @@
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from backend.services.blind_signature_utils import load_public_key, blind_token
+from backend.utilities.blind_signature_utils import load_public_key, blind_token
 import secrets
 
 # Step 1: Generate original token
