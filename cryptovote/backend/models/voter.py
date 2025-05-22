@@ -1,6 +1,7 @@
 from models.db import db
 
 class Voter(db.Model):
+    
     id = db.Column(db.Integer, primary_key=True)
     email_hash = db.Column(db.String(64), unique=True, nullable=False)
     public_key = db.Column(db.Text, nullable=True)
