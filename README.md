@@ -1,110 +1,129 @@
 
 # 🗳️ CryptoVote – Cryptographic Electronic Voting System (NTU FYP)
 
-**CryptoVote** is a cryptographic e-voting prototype developed as part of an undergraduate Final Year Project (FYP) at Nanyang Technological University (NTU), Singapore. It showcases key cryptographic principles like digital signatures, blind signatures, and homomorphic encryption applied to a simplified, privacy-preserving voting workflow.
+**CryptoVote** is a secure, privacy-preserving e-voting prototype developed for the Final Year Project (FYP) at Nanyang Technological University (NTU), Singapore. It integrates cryptographic primitives such as digital signatures, blind signatures, and homomorphic encryption into a full election lifecycle system.
 
-> ⚠️ This project is **for educational purposes only** and does not guarantee full security or scalability.
+> ⚠️ This system is intended for academic purposes and not for national-scale deployments.
 
 ---
 
 ## 🎯 Project Objectives
 
-- Explore cryptographic techniques in voting systems
-- Implement privacy-preserving voter authentication (digital signatures + 2FA)
-- Allow encrypted vote casting using homomorphic encryption (Paillier)
-- Ensure basic verifiability and auditability using cryptographic proofs
+- Implement cryptographic voting with provable privacy and auditability
+- Prevent vote coercion and impersonation using blind signatures and 2FA
+- Enable anonymous yet verifiable vote tallying with homomorphic encryption
+- Ensure tamper resistance and full audit trails for administrators
+
+---
+
+## 🔐 Security Pillars
+
+| Pillar           | Implementation                                                                 |
+|------------------|---------------------------------------------------------------------------------|
+| **Confidentiality**   | Votes are encrypted using Paillier Homomorphic Encryption                  |
+| **Authenticity**      | Digital Signatures + OTP 2FA + Session IP logging                         |
+| **Anonymity**         | Blinded tokens unlink voter identity from vote                            |
+| **Auditability**      | Zero-Knowledge Proofs (ZKP) for vote commitment verification               |
+| **Tamper Resistance** | Admin actions logged + Tally locked post-election                         |
 
 ---
 
 ## 📦 Tech Stack
 
-| Component       | Technologies                          |
-|----------------|---------------------------------------|
-| Frontend        | React.js / Vue.js                     |
-| Backend         | Python (Flask)                        |
-| Cryptography    | PyCryptodome, PyOTP, phe (Paillier)   |
-| Database        | PostgreSQL / MySQL + SHA-256 hashing  |
-| Email Services  | Flask-Mail                             |
-| 2FA             | PyOTP, qrcode                         |
-| Deployment      | Localhost / Docker / Cloud (Optional) |
-
-### 🛠️ Tools & Libraries
-
-| Purpose                | Tool/Library                      |
-|------------------------|----------------------------------|
-| Backend Framework      | Flask                            |
-| Cryptography           | pycryptodome, ecdsa              |
-| Database               | PostgreSQL                       |
-| Hashing                | hashlib (SHA-256)                |
-| Email Verification     | Flask-Mail                       |
-| 2FA                    | PyOTP, qrcode, pyqrcode          |
-| Token Generation       | itsdangerous or JWT              |
+| Layer        | Technology                                           |
+|--------------|------------------------------------------------------|
+| Frontend     | (Planned) Vue.js / React.js                         |
+| Backend      | Flask (Python)                                      |
+| Cryptography | PyCryptodome, PyOTP, phe (Paillier)                 |
+| Database     | PostgreSQL                                          |
+| Auth         | SHA-256, RSA / ECDSA + Blind Signatures             |
+| 2FA          | PyOTP + QR Code                                     |
+| Audit Report | ZKPs, CSV & PDF report generation                   |
 
 ---
 
-## 🏗️ System Architecture
+## 🧩 System Overview
 
-The system includes:
+### 🧑‍💻 Voter Flow
 
-1. **Voter Interface** – Register, authenticate, cast vote
-2. **Authentication Module** – Email domain check, digital signature, OTP-based 2FA
-3. **Backend & DB** – Secure key generation, encrypted vote storage
-4. **Audit Module** – Admin vote tally + basic cryptographic proof generation
+1. `POST /register`  
+   - Register with NTU email → receive verification link  
+2. `GET /verify-email?token=...`  
+   - Confirm email → receive TOTP QR  
+3. `POST /login`  
+   - Get nonce for signing  
+4. `POST /login` with signed nonce  
+   - Verify signature  
+5. `POST /2fa-verify`  
+   - Submit OTP  
+6. `POST /claim-token`  
+   - Receive blinded signed voting token  
+7. `POST /cast_vote`  
+   - Submit encrypted vote with signed token  
 
----
+### 🛠️ Admin Flow
 
-## 🔐 Authentication Module Design
-
-### Authentication Module
-The authentication module ensures legitimacy of voters and protects against impersonation:
-- ✅ Verifies voter identity via NTU school email domain (`@ntu.edu.sg`)
-- ✅ Employs **digital signatures** and **blind signatures** to issue credentials securely
-- ✅ Implements **2FA** using TOTP (e.g., Google Authenticator)
-- ✅ (Planned) Support for **ZKP** proofs in future phases
-
-### 🔧  Development Plan
-
-#### Voter Registration Setup
-**Objective:** Enable only valid users (e.g., NTU students) to register securely.
-
-**Tasks:**
-- Setup PostgreSQL/MySQL database for storing voter metadata
-- Create Flask/Django API endpoints:
-  - `/register` – Accepts school email, sends verification token
-  - `/verify-email` – Confirms registration via token link
-- Validate NTU email domain (e.g., ends with @ntu.edu.sg)
-- Generate asymmetric key pair (RSA/ECDSA) per voter
-- Store public key and hashed email in DB (SHA-256)
-- Create test suite to verify voter registration flow
-
-**Backend Flow:**
-- User registers with email
-- Backend checks domain + generates token
-- On confirmation → public/private keypair created
-- Public key stored; private key kept client-side only
-
-#### 2FA and Authentication
-**Objective:** Ensure tamper-proof login and secure session for vote casting
-
-**Tasks:**
-- Implement TOTP (Time-Based OTP) with PyOTP
-- Add `/login`, `/2fa-verify`, `/logged_in` endpoints
-- Use challenge-response digital signature login:
-  - Server sends nonce → Voter signs → Server verifies
-- Log login IP + timestamp (optional)
-
-**Backend Flow:**
-- Voter enters email
-- Server sends nonce
-- Voter signs nonce with private key → sends back
-- Server verifies → prompts OTP
-- TOTP verified → session allowed
+1. `POST /admin/start-election/<id>`  
+2. `GET /admin/election-status/<id>`  
+3. `POST /admin/end-election/<id>`  
+4. `POST /admin/tally-election/<id>`  
+   - Tallies votes with Paillier HE  
+   - Generates ZKPs for verification  
+5. `GET /admin/audit-report/<id>`  
+   - View JSON result with proofs  
+6. `GET /admin/download-report/<id>?format=csv/pdf`  
+   - Download full report  
+7. `GET /admin/verify-proof`  
+   - Verifier portal (manual hash checks)
 
 ---
 
-## 🚀 Getting Started
+## 🧮 Database Schema Summary
 
-### Backend Setup (Flask)
+| Table           | Description                                    |
+|------------------|------------------------------------------------|
+| `voter`         | Voter credentials, status, public key         |
+| `issued_tokens` | Blinded tokens issued to verified voters      |
+| `encrypted_votes`| Paillier-encrypted votes + token hash        |
+| `election`      | Metadata for election lifecycle & control     |
+| `admin_log`     | Tracks admin actions and audit events         |
+
+---
+
+## 🧪 Testing & Coverage
+
+```bash
+pytest --cov=backend backend/tests/ -v
+```
+
+✅ Includes tests for:
+- Voter registration and 2FA  
+- Token issuance and uniqueness  
+- Vote encryption and storage  
+- Election state transitions  
+- Tallying logic and ZKP generation  
+
+---
+
+## 📄 Audit Reports
+
+Downloadable via:
+
+```bash
+GET /admin/download-report/<election_id>?format=csv
+GET /admin/download-report/<election_id>?format=pdf
+```
+
+PDF includes:
+- NTU logo
+- Timestamp
+- Candidate vote tally
+- ZKP Commitment proof: (salt, commitment hash)
+
+---
+
+## 🚀 Getting Started (Local Dev)
+
 ```bash
 git clone https://github.com/yourusername/CryptoVote-FYP.git
 cd CryptoVote-FYP/backend
@@ -114,64 +133,29 @@ pip install -r requirements.txt
 python app.py
 ```
 
-### Run Test Suite
-```bash
-pytest --cov=backend backend/tests/ -v
-```
-> 💡 Tip: Use `pytest-html` to generate test reports for better visualization.
+---
+
+## 📜 License
+
+This project is licensed under the **GNU Affero General Public License v3.0**.
+
+You are free to use, modify, and distribute the software, but **you must disclose your source code** if:
+
+- You modify the software and run it on a server, **and**
+- Users interact with it over a network
+
+**License Summary:**
+- ✅ Commercial use allowed
+- ✅ Derivatives allowed (must also be AGPL)
+- ❌ Cannot use privately without sharing source
+- ✅ Must preserve license and attribution
+
+[Read Full License](https://www.gnu.org/licenses/agpl-3.0.html)
 
 ---
 
-## 🧪 Authentication & Voting Flow (Testing with Postman)
+## 📬 Contact
 
-### Voter Registration
-**POST** `/register`
-```json
-{
-  "email": "aavyong001@e.ntu.edu.sg"
-}
-```
-Expected: Returns `private_key` + verification token
-
-### Email Verification
-**GET** `/register/verify-email?token=<token>`
-Expected: Returns `totp_uri`
-- Run `preview_qr.py` with the URI
-- Scan using Google Authenticator
-
-### Login (Nonce-Based Digital Signature)
-1. **POST** `/login` → returns `nonce`
-2. Run `sign_nonce.py` with private key and nonce
-3. **POST** `/login` with `signed_nonce`
-Expected: Signature verified, login successful
-
-### 2FA Verification
-**POST** `/2fa-verify`
-```json
-{
-  "email": "aavyong001@e.ntu.edu.sg",
-  "otp": "123456"
-}
-```
-Expected: `vote_status = true`, 2FA success
-
-### Logout
-**POST** `/logout`
-```json
-{
-  "email": "aavyong001@e.ntu.edu.sg"
-}
-```
-Expected: `logged_in = false`
-
----
-
-## 📊 SQL to Monitor State (pgAdmin / psql)
-```sql
-SELECT id, email_hash, is_verified, logged_in, vote_status, has_votted,
-       last_login_ip, last_login_at, last_2fa_at, created_at
-FROM voter
-ORDER BY id ASC;
-```
-
-For advanced cryptographic components like vote encryption and blind signing, see `/services/crypto_utils.py` and `/routes/vote.py` (to be implemented in next phases).
+**Alvin Aw Yong**  
+Computer Engineering (NTU FYP)  
+[LinkedIn](www.linkedin.com/in/alvin-aw-yong-3087591a6) | [Email](mailto:aavyong001@e.ntu.edu.sg)
