@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 import hashlib, pyotp
 from models.voter import Voter
 from models.db import db
@@ -33,7 +33,12 @@ def verify_2fa():
     if totp.verify(otp):
         voter.vote_status = True
         voter.last_2fa_at = datetime.utcnow()
+        
+        session["email"] = voter.email_hash
+        session["role"] = voter.vote_role
+        
         print(f"✅ 2FA success. Set vote_status for {email_hash} at {datetime.utcnow()}") # For Debugging
+        print("Session after login:", session)
         
         db.session.commit()
         return jsonify({'message': '2FA successful. Voting access granted.'}), 200

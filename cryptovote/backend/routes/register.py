@@ -10,7 +10,8 @@ register_bp = Blueprint('register', __name__)
 def register():
     data = request.json
     email = data.get("email")
-    return handle_registration(email)
+    vote_role = data.get("vote_role", "voter")
+    return handle_registration(email, vote_role)
 
 @register_bp.route('/verify-email')
 def verify_email():
