@@ -8,7 +8,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
 
-def handle_registration(email: str):
+def handle_registration(email: str, vote_role="voter"):
     if not email.endswith("@e.ntu.edu.sg"):
         return jsonify({"error": "Invalid email domain"}), 400
 
@@ -40,7 +40,8 @@ def handle_registration(email: str):
         new_voter = Voter(
             email_hash=email_hash,
             verification_token=token,
-            public_key=public_key
+            public_key=public_key,
+            vote_role=vote_role
         )
 
         db.session.add(new_voter)

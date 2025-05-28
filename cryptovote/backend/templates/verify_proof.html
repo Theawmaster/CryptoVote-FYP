@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🧾 Verify Audit Commitment</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    input, button {
+      padding: 8px;
+      margin: 10px 0;
+      width: 100%;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .success { background-color: #e0ffe0; color: green; }
+    .fail { background-color: #ffe0e0; color: red; }
+  </style>
+</head>
+<body>
+  <h2>🔐 Verify Commitment Proof</h2>
+  <label>Candidate ID:</label>
+  <input type="text" id="candidate_id" placeholder="e.g., alice">
+
+  <label>Vote Count:</label>
+  <input type="number" id="vote_count" placeholder="e.g., 123">
+
+  <label>Election ID:</label>
+  <input type="text" id="election_id" placeholder="e.g., election_2025">
+
+  <label>Salt:</label>
+  <input type="text" id="salt" placeholder="Random salt provided">
+
+  <label>Commitment Hash:</label>
+  <input type="text" id="commitment" placeholder="SHA-256 hash from API">
+
+  <button onclick="verifyCommitment()">🔍 Verify</button>
+
+  <div id="result" class="result"></div>
+
+  <script>
+    async function verifyCommitment() {
+      const cid = document.getElementById('candidate_id').value.trim();
+      const count = document.getElementById('vote_count').value.trim();
+      const eid = document.getElementById('election_id').value.trim();
+      const salt = document.getElementById('salt').value.trim();
+      const givenHash = document.getElementById('commitment').value.trim();
+
+      const message = `${cid}|${count}|${eid}|${salt}`;
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const computedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+      const resultDiv = document.getElementById('result');
+      if (computedHash === givenHash) {
+        resultDiv.className = 'result success';
+        resultDiv.textContent = '✅ Verified: The commitment matches.';
+      } else {
+        resultDiv.className = 'result fail';
+        resultDiv.textContent = '❌ Failed: Commitment hash does not match.';
+      }
+    }
+  </script>
+</body>
+</html>

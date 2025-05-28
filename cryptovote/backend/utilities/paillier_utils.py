@@ -25,13 +25,13 @@ def generate_paillier_keypair():
     print("✅ Paillier keys generated and saved.")
 
 def load_public_key():
-    with open(os.path.join(KEYS_DIR, 'public_key.json'), 'r') as f:
+    with open(os.path.join(KEYS_DIR, 'paillier_public_key.json'), 'r') as f:
         data = json.load(f)
     return paillier.PaillierPublicKey(n=int(data['n']))
 
 def load_private_key():
     pub = load_public_key()
-    with open(os.path.join(KEYS_DIR, 'private_key.json'), 'r') as f:
+    with open(os.path.join(KEYS_DIR, 'paillier_private_key.json'), 'r') as f:
         data = json.load(f)
     return paillier.PaillierPrivateKey(public_key=pub, p=int(data['p']), q=int(data['q']))
 
