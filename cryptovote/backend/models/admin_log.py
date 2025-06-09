@@ -11,3 +11,6 @@ class AdminLog(db.Model):
     action = db.Column(db.Text)
     timestamp = db.Column(db.DateTime)
     ip_address = db.Column(db.String(45))
+    
+    prev_hash = db.Column(db.String(64))
+    entry_hash = db.Column(db.String(64))
