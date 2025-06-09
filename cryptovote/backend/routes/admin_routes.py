@@ -69,6 +69,7 @@ def start_election(election_id):
             election.start_time = datetime.utcnow()
 
         db.session.commit()
+        log_admin_action("start_election", session["email"], "admin", request.remote_addr)
         return jsonify({"message": f"✅ Election '{election_id}' started."}), 200
 
     except Exception as e:
@@ -82,7 +83,7 @@ def election_status(election_id):
     election = db.session.query(Election).filter_by(id=election_id).first()
     if not election:
         return jsonify({"error": "Election not found"}), 404
-
+    log_admin_action("election_status", session["email"], "admin", request.remote_addr)
     return jsonify({
         "election_id": election_id,
         "is_active": election.is_active,
@@ -149,6 +150,7 @@ def end_election(election_id):
             election.end_time = datetime.utcnow()
 
         db.session.commit()
+        log_admin_action("end_election", session["email"], "admin", request.remote_addr)
         return jsonify({"message": f"🛑 Election '{election_id}' ended."}), 200
 
     except Exception as e:
@@ -225,6 +227,7 @@ def generate_pdf_report(election_id, tally, zkp_proofs):
     pdf_bytes = pdf.output(dest='S').encode('latin-1')
     buffer = io.BytesIO(pdf_bytes)
 
+    log_admin_action("download_report", session["email"], "admin", request.remote_addr)
     return send_file(
         buffer,
         as_attachment=True,
