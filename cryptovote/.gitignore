@@ -40,10 +40,10 @@ htmlcov/
 .cache/
 
 # Tests
-.pytest_cache/
+# .pytest_cache/
 coverage.xml
 nosetests.xml
-test_*.py
+# test_*.py
 scripts/*.pem
 
 # .gitignore
