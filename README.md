@@ -1,5 +1,4 @@
-
-# 🗳️ CryptoVote – Cryptographic Electronic Voting System (NTU FYP)
+# CryptoVote – Cryptographic Electronic Voting System (NTU FYP)
 
 **CryptoVote** is a secure, privacy-preserving e-voting prototype developed for the Final Year Project (FYP) at Nanyang Technological University (NTU), Singapore. It integrates cryptographic primitives such as digital signatures, blind signatures, and homomorphic encryption into a full election lifecycle system.
 
@@ -7,7 +6,7 @@
 
 ---
 
-## 🎯 Project Objectives
+## Project Objectives
 
 - Implement cryptographic voting with provable privacy and auditability
 - Prevent vote coercion and impersonation using blind signatures and 2FA
@@ -16,7 +15,7 @@
 
 ---
 
-## 🔐 Security Pillars
+## Security Pillars
 
 | Pillar           | Implementation                                                                 |
 |------------------|---------------------------------------------------------------------------------|
@@ -24,11 +23,11 @@
 | **Authenticity**      | Digital Signatures + OTP 2FA + Session IP logging                         |
 | **Anonymity**         | Blinded tokens unlink voter identity from vote                            |
 | **Auditability**      | Zero-Knowledge Proofs (ZKP) for vote commitment verification               |
-| **Tamper Resistance** | Admin actions logged + Tally locked post-election                         |
+| **Tamper Resistance** | Admin actions logged with hash chaining + Tally locked post-election       |
 
 ---
 
-## 📦 Tech Stack
+## Tech Stack
 
 | Layer        | Technology                                           |
 |--------------|------------------------------------------------------|
@@ -39,12 +38,13 @@
 | Auth         | SHA-256, RSA / ECDSA + Blind Signatures             |
 | 2FA          | PyOTP + QR Code                                     |
 | Audit Report | ZKPs, CSV & PDF report generation                   |
+| Testing      | Pytest + Coverage Suite                             |
 
 ---
 
-## 🧩 System Overview
+## System Overview
 
-### 🧑‍💻 Voter Flow
+### Voter Flow
 
 1. `POST /register`  
    - Register with NTU email → receive verification link  
@@ -78,34 +78,37 @@
 
 ---
 
-## 🧮 Database Schema Summary
+## Database Schema Summary
 
-| Table           | Description                                    |
-|------------------|------------------------------------------------|
-| `voter`         | Voter credentials, status, public key         |
-| `issued_tokens` | Blinded tokens issued to verified voters      |
-| `encrypted_votes`| Paillier-encrypted votes + token hash        |
-| `election`      | Metadata for election lifecycle & control     |
-| `admin_log`     | Tracks admin actions and audit events         |
+| Table                   | Description                                            |
+|------------------------|--------------------------------------------------------|
+| `voter`                | Voter credentials, verification status, public key     |
+| `issued_tokens`        | Blinded tokens issued to verified voters               |
+| `encrypted_votes`      | Paillier-encrypted votes + token hash                 |
+| `election`             | Metadata for election lifecycle & control              |
+| `admin_log`            | Tracks admin actions and audit events                  |
+| `encrypted_candidate_votes` | Stores individual encrypted votes per candidate     |
 
 ---
 
-## 🧪 Testing & Coverage
+## Testing & Coverage
 
 ```bash
 pytest --cov=backend backend/tests/ -v
 ```
 
-✅ Includes tests for:
-- Voter registration and 2FA  
-- Token issuance and uniqueness  
-- Vote encryption and storage  
-- Election state transitions  
-- Tallying logic and ZKP generation  
+Fully tested with >90% coverage for:
+- Voter registration, login, 2FA
+- Token issuance, uniqueness constraint
+- Vote encryption, token linking
+- Election state changes
+- Tallying correctness, aggregation edge cases
+- ZKP generation + commitment validation
+- Admin action hash chaining
 
 ---
 
-## 📄 Audit Reports
+## Audit Reports
 
 Downloadable via:
 
@@ -116,13 +119,14 @@ GET /admin/download-report/<election_id>?format=pdf
 
 PDF includes:
 - NTU logo
-- Timestamp
-- Candidate vote tally
-- ZKP Commitment proof: (salt, commitment hash)
+- Timestamp and election ID
+- Candidate-wise vote tally
+- ZKP salt, hash commitment
+- Admin hash log trail
 
 ---
 
-## 🚀 Getting Started (Local Dev)
+## Getting Started (Local Dev)
 
 ```bash
 git clone https://github.com/yourusername/CryptoVote-FYP.git
@@ -135,7 +139,7 @@ python app.py
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the **GNU Affero General Public License v3.0**.
 
@@ -154,7 +158,7 @@ You are free to use, modify, and distribute the software, but **you must disclos
 
 ---
 
-## 📬 Contact
+## Contact
 
 **Alvin Aw Yong**  
 Computer Engineering (NTU FYP)  
