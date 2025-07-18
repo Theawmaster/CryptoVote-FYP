@@ -6,7 +6,7 @@ from utilities.paillier_utils import load_public_key
 from datetime import datetime
 import hashlib
 
-CANDIDATE_IDS = ["alice", "bob", "charlie"]
+CANDIDATE_IDS = ["adriel", "brend", "chock"]
 
 
 def is_valid_hex(s):
