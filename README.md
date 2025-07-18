@@ -1,5 +1,4 @@
-
-# 🗳️ CryptoVote – Cryptographic Electronic Voting System (NTU FYP)
+# CryptoVote – Cryptographic Electronic Voting System (NTU FYP)
 
 **CryptoVote** is a secure, privacy-preserving e-voting prototype developed as a Final Year Project (FYP) at Nanyang Technological University (NTU), Singapore. It integrates advanced cryptographic techniques—digital signatures, blind signatures, and homomorphic encryption—across the full election lifecycle.
 
@@ -7,7 +6,8 @@
 
 ---
 
-## 🎯 Objectives
+
+## Project Objectives
 
 - ✅ Ensure **privacy** and **verifiability** using cryptographic constructs  
 - ✅ Prevent vote manipulation, coercion, and impersonation  
@@ -17,7 +17,7 @@
 
 ---
 
-## 🔐 Core Security Pillars
+## Core Security Pillars
 
 | Pillar              | Implementation Highlights                                                       |
 |---------------------|----------------------------------------------------------------------------------|
@@ -29,7 +29,8 @@
 
 ---
 
-## 📦 Tech Stack
+## Tech Stack
+
 
 | Layer         | Technology                                                |
 |---------------|-----------------------------------------------------------|
@@ -42,9 +43,9 @@
 
 ---
 
-## 🧩 System Architecture
+## System Architecture
 
-### 🧑‍💻 Voter Operation Flow
+###  Voter Operation Flow
 
 1. **Register Account**
    ```
@@ -127,7 +128,7 @@
 
 ---
 
-## 🧮 Database Schema Summary
+## Database Schema Summary
 
 | Table               | Description                                     |
 |---------------------|-------------------------------------------------|
@@ -136,10 +137,19 @@
 | `encrypted_votes`   | Stores per-candidate Paillier-encrypted votes   |
 | `election`          | Metadata and state of elections                 |
 | `admin_log`         | Logs admin actions with timestamps              |
+=======
+| Table                   | Description                                            |
+|------------------------|--------------------------------------------------------|
+| `voter`                | Voter credentials, verification status, public key     |
+| `issued_tokens`        | Blinded tokens issued to verified voters               |
+| `encrypted_votes`      | Paillier-encrypted votes + token hash                 |
+| `election`             | Metadata for election lifecycle & control              |
+| `admin_log`            | Tracks admin actions and audit events                  |
+| `encrypted_candidate_votes` | Stores individual encrypted votes per candidate     |
 
 ---
 
-## 🧪 Testing & Coverage
+## Testing & Coverage
 
 ```bash
 pytest --cov=backend backend/tests/ -v
@@ -151,10 +161,9 @@ Tests included:
 - Vote encryption and replay protection
 - Election state transitions
 - ZKP generation and tally checks
-
 ---
 
-## 📄 Audit Reports
+## Audit Reports
 
 Download audit trail:
 ```
@@ -170,7 +179,7 @@ PDF includes:
 
 ---
 
-## 🚀 Local Development Setup
+##  Local Development Setup
 
 ```bash
 git clone https://github.com/yourusername/CryptoVote-FYP.git
@@ -183,7 +192,7 @@ python app.py
 
 ---
 
-## 📜 License
+## License
 
 Licensed under the **GNU Affero General Public License v3.0 (AGPLv3)**.
 
@@ -196,7 +205,7 @@ Licensed under the **GNU Affero General Public License v3.0 (AGPLv3)**.
 
 ---
 
-## 📬 Contact
+## Contact
 
 **Alvin Aw Yong**  
 Computer Engineering – NTU Singapore  
