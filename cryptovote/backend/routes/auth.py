@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from services.auth_service import (
     get_email_hash, request_nonce, validate_nonce, clear_nonce
 )
@@ -53,3 +53,26 @@ def login():
         db.session.rollback()
         print(f"❌ DB update failed: {e}")
         return jsonify({'error': 'Verified but failed to update signature state.'}), 500
+
+@auth_bp.route('/admin/dev-login-admin', methods=['GET'])
+def dev_login_admin():
+    try:
+        email_hash = request.args.get("email_hash")
+        if not email_hash:
+            return jsonify({"error": "Missing email_hash parameter"}), 400
+
+        voter = Voter.query.filter_by(email_hash=email_hash).first()
+        if not voter:
+            return jsonify({"error": "No voter found with this hash"}), 404
+
+        if voter.vote_role != "admin":
+            return jsonify({"error": "Access denied: not an admin"}), 403
+
+        session["email"] = email_hash
+        session["role"] = "admin"
+
+        return jsonify({"message": f"Dev login successful as admin: {email_hash}"}), 200
+
+    except Exception as e:
+        print(f"💥 Error in /dev-login-admin: {e}")
+        return jsonify({"error": "Internal server error"}), 500

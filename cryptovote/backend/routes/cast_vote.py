@@ -13,7 +13,7 @@ import hashlib
 from datetime import datetime
 
 cast_vote_bp = Blueprint('cast_vote', __name__)
-CANDIDATE_IDS = ["alice", "bob", "charlie"]
+CANDIDATE_IDS = ["adriel", "brend", "chock"]
 
 @cast_vote_bp.route('/cast-vote', methods=['POST'])
 def cast_vote():
@@ -40,6 +40,7 @@ def cast_vote():
 
     # ✅ 4. Encrypt one vote per candidate using Paillier
     public_key = load_paillier_public_key()
+    
     for cid in CANDIDATE_IDS:
         value = 1 if cid == candidate_id else 0
         enc = public_key.encrypt(value)
