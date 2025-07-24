@@ -6,7 +6,7 @@ class Election(db.Model):
 
     id = db.Column(db.String(64), primary_key=True)
     name = db.Column(db.String(128), nullable=False)
-    start_time = db.Column(db.DateTime, default=datetime.utcnow)
+    start_time = db.Column(db.DateTime, nullable=True)
     end_time = db.Column(db.DateTime)
     is_active = db.Column(db.Boolean, default=False)
     has_started = db.Column(db.Boolean, default=False)
