@@ -56,3 +56,5 @@ def test_logout_db_failure(mock_voter_class, mock_db, client):
     response = client.post("/logout/", json={"email": "valid@e.ntu.edu.sg"})
     assert response.status_code == 500
     assert "Logout failed" in response.get_json()["error"]
+    
+

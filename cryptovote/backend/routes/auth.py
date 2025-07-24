@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify, session
+from cryptovote.backend.utilities.anomaly_utils import flag_suspicious_activity
 from services.auth_service import (
     get_email_hash, request_nonce, validate_nonce, clear_nonce
 )
@@ -6,6 +7,7 @@ from services.registration_service import verify_voter_signature
 from models.voter import Voter
 from models.db import db
 from datetime import datetime
+from utilities.anomaly_utils import flag_suspicious_activity, failed_logins_last_10min
 
 auth_bp = Blueprint('login', __name__)
 
@@ -38,6 +40,11 @@ def login():
 
     success, msg = verify_voter_signature(email, signed_nonce, nonce)
     if not success:
+        flag_suspicious_activity(email, request.remote_addr, "Failed login attempt", "/login")
+        
+        if failed_logins_last_10min(request.remote_addr) > 3:
+            flag_suspicious_activity(email, request.remote_addr, "⚠️ Multiple failed logins from same IP", "/login")
+        
         return jsonify({'error': msg}), 401
 
     clear_nonce(email_hash)

@@ -6,6 +6,7 @@ from services.tallying_service import tally_votes
 from utilities.audit_utils import generate_all_zkp_proofs
 from utilities.logger_utils import log_admin_action
 from fpdf import FPDF
+from zoneinfo import ZoneInfo
 import csv, io, os
 
 def generate_report_file(election_id, format_type, admin_email, ip_addr):
@@ -64,7 +65,8 @@ def generate_pdf_report(election_id, tally, zkp_proofs, admin_email, ip_addr):
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(200, 10, txt=f"Audit Report for Election: {election_id}", ln=True, align='C')
 
-    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+    sgt_now = datetime.now(ZoneInfo("Asia/Singapore"))
+    timestamp = sgt_now.strftime("%Y-%m-%d %H:%M:%S %Z")
     pdf.set_font("Arial", '', 10)
     pdf.cell(200, 10, txt=f"Generated on: {timestamp}", ln=True, align='C')
     pdf.ln(8)

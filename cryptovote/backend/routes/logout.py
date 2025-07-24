@@ -1,8 +1,11 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from models.voter import Voter
 from models.db import db
 import hashlib
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+SGT = ZoneInfo("Asia/Singapore")
 
 logout_bp = Blueprint('logout', __name__)
 
@@ -11,6 +14,13 @@ def logout():
     data = request.get_json()
     email = data.get("email")
 
+    # Clear session if admin
+    if session.get("role") == "admin":
+        session.clear()
+        print(f"🔓 Admin logout at {datetime.now(SGT)}")
+        return jsonify({"message": "Admin logout successful."}), 200
+
+    # Else handle voter logout
     if not email:
         return jsonify({"error": "Email is required"}), 400
 
@@ -25,8 +35,9 @@ def logout():
 
     try:
         voter.logged_in = False
+        voter.logged_in_2fa = False
         db.session.commit()
-        print(f"🔓 Logout successful for {email_hash} at {datetime.utcnow()}")
+        print(f"🔓 Voter logout for {email_hash} at {datetime.now(SGT)}")
         return jsonify({"message": "Logout successful."}), 200
     except Exception as e:
         db.session.rollback()
