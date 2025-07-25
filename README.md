@@ -133,6 +133,15 @@
 | `encrypted_votes`   | Stores per-candidate Paillier-encrypted votes   |
 | `election`          | Metadata and state of elections                 |
 | `admin_log`         | Logs admin actions with timestamps              |
+=======
+| Table                   | Description                                            |
+|------------------------|--------------------------------------------------------|
+| `voter`                | Voter credentials, verification status, public key     |
+| `issued_tokens`        | Blinded tokens issued to verified voters               |
+| `encrypted_votes`      | Paillier-encrypted votes + token hash                 |
+| `election`             | Metadata for election lifecycle & control              |
+| `admin_log`            | Tracks admin actions and audit events                  |
+| `encrypted_candidate_votes` | Stores individual encrypted votes per candidate     |
 
 ---
 
@@ -152,12 +161,11 @@ Tests include:
 - Vote encryption and replay protection
 - Election state transitions
 - ZKP generation and tally checks
+
 - Admin action logging and audit validation
 - Full coverage for `/login`, blind signature utils, and `audit_service.py`
 
 > ✅ Current backend test coverage exceeds **secure e-voting standard**, with comprehensive unit tests and mocking.
-
----
 
 ## Audit Reports
 
