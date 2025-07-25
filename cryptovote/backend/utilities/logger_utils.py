@@ -2,6 +2,9 @@ import hashlib
 from models.admin_log import AdminLog
 from models.db import db
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+SGT = ZoneInfo("Asia/Singapore")
 
 def get_last_log_hash():
     last_entry = AdminLog.query.order_by(AdminLog.id.desc()).first()
@@ -14,7 +17,7 @@ def compute_log_hash(prev_hash, email, role, action, timestamp, ip_address):
 def log_admin_action(action, email, role, ip_address):
     try:
         prev_hash = get_last_log_hash()
-        timestamp = datetime.utcnow()
+        timestamp = datetime.now(SGT)
         entry_hash = compute_log_hash(prev_hash, email, role, action, timestamp, ip_address)
 
         new_log = AdminLog(

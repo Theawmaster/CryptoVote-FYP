@@ -44,6 +44,13 @@ def create_election():
         flag_suspicious_activity(email, request.remote_addr, "Logged out admin accessed restricted route", request.path)
         return jsonify({"error": "Unauthorized. Admin login required."}), 403
 
+    data = request.get_json() or {}
+    election_id = data.get("election_id")
+
+    if not election_id:
+        return jsonify({"error": "Missing election_id"}), 400
+
     admin_email = session.get("email")
     return create_new_election(election_id, admin_email, request.remote_addr)
+
 

@@ -6,14 +6,13 @@
 
 ---
 
+## Objectives
 
-## Project Objectives
-
-- ✅ Ensure **privacy** and **verifiability** using cryptographic constructs  
-- ✅ Prevent vote manipulation, coercion, and impersonation  
-- ✅ Support **end-to-end verifiability** with blind signatures and 2FA  
-- ✅ Enable **anonymous** yet **auditable** homomorphic vote tallying  
-- ✅ Provide traceable logs and proofs for **election integrity**
+- Ensure **privacy** and **verifiability** using cryptographic constructs  
+- Prevent vote manipulation, coercion, and impersonation  
+- Support **end-to-end verifiability** with blind signatures and 2FA  
+- Enable **anonymous** yet **auditable** homomorphic vote tallying  
+- Provide traceable logs and proofs for **election integrity**
 
 ---
 
@@ -31,7 +30,6 @@
 
 ## Tech Stack
 
-
 | Layer         | Technology                                                |
 |---------------|-----------------------------------------------------------|
 | Frontend      | *(Planned)* Vue.js or React.js                           |
@@ -45,7 +43,7 @@
 
 ## System Architecture
 
-###  Voter Operation Flow
+### Voter Operation Flow
 
 1. **Register Account**
    ```
@@ -85,9 +83,7 @@
    - Votes stored in `encrypted_candidate_votes` table
    - Tokens marked as used in `issued_tokens`
 
----
-
-### 🛠️ Admin Operation Flow
+### Admin Operation Flow
 
 1. **Start Election**
    ```
@@ -152,16 +148,24 @@
 ## Testing & Coverage
 
 ```bash
-pytest --cov=backend backend/tests/ -v
+PYTHONPATH=. pytest --cov=cryptovote/backend cryptovote/backend/tests/ -v
+```
+Run this at this directory:
+```bash
+(venv) theawmaster@192 ~/TechStuff/NTU_AY2425_FYP/CryptoVote-FYPrefactor_ver_8 $ 
 ```
 
-Tests included:
+Tests include:
 - Voter registration and OTP flow
 - Token issuance and verification
 - Vote encryption and replay protection
 - Election state transitions
 - ZKP generation and tally checks
----
+
+- Admin action logging and audit validation
+- Full coverage for `/login`, blind signature utils, and `audit_service.py`
+
+> ✅ Current backend test coverage exceeds **secure e-voting standard**, with comprehensive unit tests and mocking.
 
 ## Audit Reports
 
@@ -179,7 +183,7 @@ PDF includes:
 
 ---
 
-##  Local Development Setup
+## Local Development Setup
 
 ```bash
 git clone https://github.com/yourusername/CryptoVote-FYP.git

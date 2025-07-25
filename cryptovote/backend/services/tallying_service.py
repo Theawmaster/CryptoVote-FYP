@@ -5,11 +5,9 @@ from phe import paillier
 from sqlalchemy.orm import Session
 import logging
 
-
 def fetch_encrypted_votes(session: Session):
     """Retrieve all encrypted candidate votes from the database."""
     return session.query(EncryptedCandidateVote).all()
-
 
 def reconstruct_encrypted_number(public_key, vote):
     """
@@ -29,7 +27,6 @@ def reconstruct_encrypted_number(public_key, vote):
         logging.error(f"❌ Failed to reconstruct encrypted number for vote {vote.id}: {e}")
         return None
 
-
 def aggregate_votes(votes, public_key):
     """
     Aggregate encrypted votes using homomorphic addition.
@@ -44,7 +41,6 @@ def aggregate_votes(votes, public_key):
             tally_map[candidate_id] += encrypted_num
 
     return tally_map
-
 
 def decrypt_tally(tally_map, private_key):
     """
@@ -61,7 +57,6 @@ def decrypt_tally(tally_map, private_key):
             logging.error(f"❌ Decryption failed for candidate '{candidate_id}': {e}")
             results[candidate_id] = -1  # or None if preferred
     return results
-
 
 def format_tally_result(result_dict, max_reasonable_votes=10000):
     formatted = []

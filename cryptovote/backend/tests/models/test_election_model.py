@@ -99,7 +99,12 @@ def test_default_fields(session):
     election = Election(
         id="election2028",
         name="Default Check Election",
-        end_time=now + timedelta(days=1)
+        end_time=now + timedelta(days=1),
+        start_time=now,
+        is_active=False,
+        has_started=False,
+        has_ended=False,
+        tally_generated=False
     )
     session.add(election)
     session.commit()

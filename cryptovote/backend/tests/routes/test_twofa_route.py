@@ -4,6 +4,9 @@ import pytest
 from flask import Flask, jsonify
 from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
+from pytz import timezone
+
+SGT = timezone("Asia/Singapore")
 
 # Add backend path dynamically
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
@@ -26,7 +29,6 @@ def test_missing_email_or_otp(client):
     assert response.status_code == 400
     assert "Email and OTP are required" in response.get_json()["error"]
 
-
 @patch("routes.twofa.Voter")
 def test_user_not_logged_in(mock_voter_class, client):
     mock_voter_class.query.filter_by.return_value.first.return_value = None
@@ -34,17 +36,22 @@ def test_user_not_logged_in(mock_voter_class, client):
     assert response.status_code == 403
     assert "not logged in" in response.get_json()["error"]
 
-
 @patch("routes.twofa.Voter")
 def test_cooldown_block(mock_voter_class, client):
     voter = MagicMock()
     voter.logged_in = True
+    voter.logged_in_2fa = False
+    voter.last_2fa_at = None
     mock_voter_class.query.filter_by.return_value.first.return_value = voter
 
     email_hash = "mockedhash"
     with patch("routes.twofa.hashlib.sha256") as mock_hash:
-        mock_hash.return_value.hexdigest.return_value = email_hash
-        otp_cooldown[email_hash] = datetime.utcnow()
+        mock_hash_instance = MagicMock()
+        mock_hash_instance.hexdigest.return_value = email_hash
+        mock_hash.return_value = mock_hash_instance
+
+        # Trigger cooldown
+        otp_cooldown[email_hash] = datetime.now(tz=SGT)
 
         response = client.post("/2fa-verify", json={"email": "test@e.ntu.edu.sg", "otp": "000000"})
         assert response.status_code == 429
@@ -56,9 +63,11 @@ def test_cooldown_block(mock_voter_class, client):
 def test_successful_2fa(mock_voter_class, mock_totp_class, mock_db, client):
     voter = MagicMock()
     voter.logged_in = True
+    voter.logged_in_2fa = True
+    voter.last_2fa_at = datetime.now(tz=SGT) - timedelta(minutes=6)
     voter.totp_secret = "base32secret"
     voter.email_hash = "testhash"
-    voter.vote_role = "voter" 
+    voter.vote_role = "voter"
     mock_voter_class.query.filter_by.return_value.first.return_value = voter
 
     totp_instance = MagicMock()
@@ -78,6 +87,8 @@ def test_successful_2fa(mock_voter_class, mock_totp_class, mock_db, client):
 def test_invalid_otp(mock_voter_class, mock_totp_class, client):
     voter = MagicMock()
     voter.logged_in = True
+    voter.logged_in_2fa = True
+    voter.last_2fa_at = datetime.now(tz=SGT) - timedelta(minutes=6)
     voter.totp_secret = "base32secret"
     mock_voter_class.query.filter_by.return_value.first.return_value = voter
 
@@ -87,7 +98,10 @@ def test_invalid_otp(mock_voter_class, mock_totp_class, client):
 
     email_hash = "testhash"
     with patch("routes.twofa.hashlib.sha256") as mock_hash:
-        mock_hash.return_value.hexdigest.return_value = email_hash
+        mock_hash_instance = MagicMock()
+        mock_hash_instance.hexdigest.return_value = email_hash
+        mock_hash.return_value = mock_hash_instance
+
         response = client.post("/2fa-verify", json={"email": "test@e.ntu.edu.sg", "otp": "000000"})
         assert response.status_code == 401
         assert "Invalid OTP" in response.get_json()["error"]
