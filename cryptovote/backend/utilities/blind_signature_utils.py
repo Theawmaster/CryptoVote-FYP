@@ -67,30 +67,30 @@ def gcd(a, b):
     return a
 
 # === Demo ===
-if __name__ == "__main__":
-    if not os.path.exists(PRIVATE_KEY_PATH) or not os.path.exists(PUBLIC_KEY_PATH):
-        generate_rsa_keypair()
-        print("RSA key pair generated.")
-    else:
-        print("RSA key pair already exists.")
+# if __name__ == "__main__":
+#     if not os.path.exists(PRIVATE_KEY_PATH) or not os.path.exists(PUBLIC_KEY_PATH):
+#         generate_rsa_keypair()
+#         print("RSA key pair generated.")
+#     else:
+#         print("RSA key pair already exists.")
 
-    pub = load_public_key()
-    priv = load_private_key()
+#     pub = load_public_key()
+#     priv = load_private_key()
 
-    token = b"voteforA123"
+#     token = b"voteforA123"
 
-    # Step 1: Blind
-    blinded, r = blind_token(pub, token)
-    print("Blinded int:", blinded)
+#     # Step 1: Blind
+#     blinded, r = blind_token(pub, token)
+#     print("Blinded int:", blinded)
 
-    # Step 2: Sign
-    signed_blinded = sign_blinded_token(blinded)
-    print("Signed blinded:", signed_blinded)
+#     # Step 2: Sign
+#     signed_blinded = sign_blinded_token(blinded)
+#     print("Signed blinded:", signed_blinded)
 
-    # Step 3: Unblind
-    unblinded_sig = unblind_token(pub, signed_blinded, r)
-    print("Unblinded signature:", unblinded_sig)
+#     # Step 3: Unblind
+#     unblinded_sig = unblind_token(pub, signed_blinded, r)
+#     print("Unblinded signature:", unblinded_sig)
 
-    # Step 4: Verify
-    is_valid = verify_signed_token(pub, token, unblinded_sig)
-    print("✅ Signature valid:", is_valid)
+#     # Step 4: Verify
+#     is_valid = verify_signed_token(pub, token, unblinded_sig)
+#     print("✅ Signature valid:", is_valid)

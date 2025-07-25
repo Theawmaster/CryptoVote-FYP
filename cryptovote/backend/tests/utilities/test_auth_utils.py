@@ -1,59 +1,102 @@
 import pytest
 from flask import Flask, session, jsonify
 from unittest.mock import patch, MagicMock
-from utilities import auth_utils
 
+from cryptovote.backend.utilities.auth_utils import role_required
 
-app = Flask(__name__)
-app.secret_key = "testing_secret"  # Needed for session
+@pytest.fixture
+def app():
+    app = Flask(__name__)
+    app.secret_key = "test"
+    return app
 
+@pytest.fixture
+def client(app):
+    return app.test_client()
 
-@app.route("/admin-only")
-@auth_utils.role_required("admin")
-def protected_view():
-    return jsonify({"message": "Welcome, admin!"})
+def test_role_required_no_email(app, client):
+    @app.route("/protected")
+    @role_required("admin")
+    def protected():
+        return jsonify({"msg": "ok"})
 
-@patch("utilities.auth_utils.db")
-@patch("utilities.auth_utils.Voter")
-def test_no_session_redirect(mock_voter, mock_db):
-    with app.test_request_context("/admin-only"):
-        # Clear session
-        session.clear()
+    with client.session_transaction() as sess:
+        sess.clear()  # No email in session
 
-        response = protected_view()
-        assert response[1] == 401
-        assert b"Authentication required" in response[0].data
+    response = client.get("/protected")
+    assert response.status_code == 401
+    assert b"Authentication required" in response.data
 
+@patch("cryptovote.backend.utilities.auth_utils.db")
+def test_role_required_voter_not_found(mock_db, app, client):
+    mock_db.session.query.return_value.filter_by.return_value.first.return_value = None
 
-@patch("utilities.auth_utils.db")
-@patch("utilities.auth_utils.Voter")
-def test_incorrect_role(mock_voter, mock_db):
-    with app.test_request_context("/admin-only"):
-        session["email"] = "test@example.com"
-        session["role"] = "voter"
+    @app.route("/protected")
+    @role_required("admin")
+    def protected():
+        return jsonify({"msg": "ok"})
 
-        fake_voter = MagicMock()
-        fake_voter.vote_role = "voter"
+    with client.session_transaction() as sess:
+        sess["email"] = "nonexistent@example.com"
+        sess["role"] = "admin"
 
-        mock_db.session.query().filter_by().first.return_value = fake_voter
+    response = client.get("/protected")
+    assert response.status_code == 403
+    assert b"Admin role required" in response.data
 
-        response = protected_view()
-        assert response[1] == 403
-        assert b"Admin role required" in response[0].data
+@patch("cryptovote.backend.utilities.auth_utils.db")
+def test_role_required_wrong_db_role(mock_db, app, client):
+    voter_mock = MagicMock()
+    voter_mock.vote_role = "voter"
+    mock_db.session.query.return_value.filter_by.return_value.first.return_value = voter_mock
 
+    @app.route("/protected")
+    @role_required("admin")
+    def protected():
+        return jsonify({"msg": "ok"})
 
-@patch("utilities.auth_utils.db")
-@patch("utilities.auth_utils.Voter")
-def test_correct_role_access(mock_voter, mock_db):
-    with app.test_request_context("/admin-only"):
-        session["email"] = "admin@example.com"
-        session["role"] = "admin"
+    with client.session_transaction() as sess:
+        sess["email"] = "admin@example.com"
+        sess["role"] = "admin"
 
-        fake_voter = MagicMock()
-        fake_voter.vote_role = "admin"
+    response = client.get("/protected")
+    assert response.status_code == 403
+    assert b"Admin role required" in response.data
 
-        mock_db.session.query().filter_by().first.return_value = fake_voter
+@patch("cryptovote.backend.utilities.auth_utils.db")
+def test_role_required_session_role_mismatch(mock_db, app, client):
+    voter_mock = MagicMock()
+    voter_mock.vote_role = "admin"
+    mock_db.session.query.return_value.filter_by.return_value.first.return_value = voter_mock
 
-        response = protected_view()
-        assert response.status_code == 200
-        assert b"Welcome, admin!" in response.data
+    @app.route("/protected")
+    @role_required("admin")
+    def protected():
+        return jsonify({"msg": "ok"})
+
+    with client.session_transaction() as sess:
+        sess["email"] = "admin@example.com"
+        sess["role"] = "voter"  # Session role mismatch
+
+    response = client.get("/protected")
+    assert response.status_code == 403
+    assert b"Unauthorized access" in response.data
+
+@patch("cryptovote.backend.utilities.auth_utils.db")
+def test_role_required_success(mock_db, app, client):
+    voter_mock = MagicMock()
+    voter_mock.vote_role = "admin"
+    mock_db.session.query.return_value.filter_by.return_value.first.return_value = voter_mock
+
+    @app.route("/protected")
+    @role_required("admin")
+    def protected():
+        return jsonify({"msg": "ok"})
+
+    with client.session_transaction() as sess:
+        sess["email"] = "admin@example.com"
+        sess["role"] = "admin"
+
+    response = client.get("/protected")
+    assert response.status_code == 200
+    assert b"ok" in response.data

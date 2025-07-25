@@ -103,6 +103,10 @@ def test_tally_votes(mock_decrypt, mock_aggregate, mock_fetch, mock_priv, mock_p
     }
 
     mock_session = MagicMock()
+
+    # ✅ Fix for the TypeError in tally_votes
+    mock_pub.return_value.n.bit_length.return_value = 4096
+
     result = tallying_service.tally_votes(mock_session)
 
     assert {"alice", "bob"} == {r["candidate_id"] for r in result}
@@ -111,3 +115,53 @@ def test_tally_votes(mock_decrypt, mock_aggregate, mock_fetch, mock_priv, mock_p
     mock_fetch.assert_called_once_with(mock_session)
     mock_aggregate.assert_called_once_with(mock_votes, mock_pub.return_value)
     mock_decrypt.assert_called_once()
+
+@patch("services.tallying_service.paillier")
+def test_reconstruct_encrypted_number_valid(mock_phe):
+    mock_pubkey = MagicMock()
+    mock_pubkey.nsquare = 1000
+    mock_phe.EncryptedNumber.return_value = "enc_obj"
+
+    vote = MagicMock(vote_ciphertext="123", vote_exponent="1", id=1)
+    result = tallying_service.reconstruct_encrypted_number(mock_pubkey, vote)
+
+    assert result == "enc_obj"
+    mock_phe.EncryptedNumber.assert_called_once()
+
+@patch("services.tallying_service.paillier")
+@patch("services.tallying_service.logging")
+def test_reconstruct_encrypted_number_warns_on_overflow(mock_log, mock_phe):
+    mock_pubkey = MagicMock()
+    mock_pubkey.nsquare = 500
+    mock_phe.EncryptedNumber.return_value = "enc_obj"
+
+    vote = MagicMock(vote_ciphertext="999", vote_exponent="1", id="overflow1")
+    result = tallying_service.reconstruct_encrypted_number(mock_pubkey, vote)
+
+    assert result == "enc_obj"
+    mock_log.warning.assert_called_once_with("[!] Ciphertext exceeds n² for vote overflow1. Potential overflow risk.")
+
+@patch("services.tallying_service.logging")
+def test_decrypt_tally_failure(mock_log):
+    mock_private_key = MagicMock()
+    mock_private_key.decrypt.side_effect = Exception("Decryption error")
+
+    encrypted_map = {"charlie": "corrupted"}
+
+    result = tallying_service.decrypt_tally(encrypted_map, mock_private_key)
+
+    assert result == {"charlie": -1}
+    assert mock_log.error.call_count == 1
+    assert "Decryption failed for candidate 'charlie'" in mock_log.error.call_args[0][0]
+
+def test_format_tally_result_with_failure_and_overflow():
+    input_map = {
+        "dave": -1,
+        "emma": 15000
+    }
+    result = tallying_service.format_tally_result(input_map)
+
+    assert result == [
+        {"candidate_id": "dave", "vote_count": "⚠️ Decryption Failed"},
+        {"candidate_id": "emma", "vote_count": "⚠️ Overflow (15000)"}
+    ]

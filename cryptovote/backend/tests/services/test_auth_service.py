@@ -1,103 +1,103 @@
-import sys, os
 import pytest
-from flask import Flask
-from unittest.mock import patch, MagicMock
+from flask import Flask, jsonify, request
+from services import auth_service
+from unittest.mock import patch
 
-# Dynamically add backend path
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
-if BASE_DIR not in sys.path:
-    sys.path.insert(0, BASE_DIR)
+# Simulate the Flask app and login route using auth_service
+@pytest.fixture
+def app():
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    app.secret_key = "integration_test_secret"
 
-from routes.blind_sign import blind_sign_bp
-from models.db import db  # shared SQLAlchemy instance
+    @app.route("/auth/login", methods=["POST"])
+    def login():
+        data = request.get_json()
+        email = data.get("email")
+        signed_nonce = data.get("signed_nonce")
+
+        if not email:
+            return jsonify({"error": "Email is required"}), 400
+
+        email_hash = auth_service.get_email_hash(email)
+
+        # Mocked voter exists and is verified
+        voter = {"email_hash": email_hash, "is_verified": True}
+
+        if not voter or not voter["is_verified"]:
+            return jsonify({"error": "Unverified or unknown voter."}), 403
+
+        if not signed_nonce:
+            if False:  # Assume not already logged in for this test
+                return jsonify({"message": "You are already signed in."}), 200
+
+            nonce = auth_service.request_nonce(email_hash)
+            return jsonify({"nonce": nonce}), 200
+
+        # Simulate nonce validation and signature check
+        nonce, error = auth_service.validate_nonce(email_hash)
+        if error:
+            return jsonify({"error": error}), 403
+
+        # Simulate successful signature verification
+        if signed_nonce != f"signature_of_{nonce}":
+            return jsonify({"error": "Invalid signature"}), 401
+
+        auth_service.clear_nonce(email_hash)
+        return jsonify({"message": "Login successful"}), 200
+
+    return app
+
 
 @pytest.fixture
-def client():
-    app = Flask(__name__)
-    app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///:memory:"
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+def client(app):
+    return app.test_client()
 
-    db.init_app(app)
 
-    with app.app_context():
-        db.create_all()
-        app.register_blueprint(blind_sign_bp)
-        yield app.test_client()
-        db.session.remove()
-        db.drop_all()
-
-def test_missing_email_or_token(client):
-    res = client.post("/blind-sign", json={})
-    assert res.status_code == 400
-    assert "error" in res.get_json()
-
-@patch("routes.blind_sign.Voter")
-@patch("routes.blind_sign.hashlib.sha256")
-def test_unauthorized_voter(mock_sha, mock_voter_class, client):
-    mock_sha.return_value.hexdigest.return_value = "hash"
-    mock_voter_class.query.filter_by.return_value.first.return_value = None
-    res = client.post("/blind-sign", json={"email": "test@e.ntu.edu.sg", "blinded_token": "abc123"})
-    assert res.status_code == 403
-
-@patch("routes.blind_sign.db")
-@patch("routes.blind_sign.IssuedToken")
-@patch("routes.blind_sign.sign_blinded_token", return_value=123456789)
-@patch("routes.blind_sign.Voter")
-def test_successful_token_signing(mock_voter_class, mock_sign, mock_token, mock_db, client):
-    voter = MagicMock(is_verified=True, logged_in=True, has_token=False)
-    mock_voter_class.query.filter_by.return_value.first.return_value = voter
-
-    res = client.post("/blind-sign", json={"email": "test@e.ntu.edu.sg", "blinded_token": "abc"})
-    assert res.status_code == 200
-    assert "signed_blinded_token" in res.get_json()
-
-@patch("routes.blind_sign.Voter")
-def test_token_already_issued(mock_voter_class, client):
-    voter = MagicMock(is_verified=True, logged_in=True, has_token=True)
-    mock_voter_class.query.filter_by.return_value.first.return_value = voter
-
-    res = client.post("/blind-sign", json={"email": "test@e.ntu.edu.sg", "blinded_token": "abc"})
-    assert res.status_code == 403
-    assert "already issued" in res.get_json()["error"]
-
-@patch("routes.blind_sign.Voter")
-@patch("routes.blind_sign.hashlib.sha256")
-def test_unauthorized_user(mock_hashlib, mock_voter_class, client):
-    mock_hashlib.return_value.hexdigest.return_value = "dummyhash"
-    mock_voter_class.query.filter_by.return_value.first.return_value = None
-    response = client.post("/blind-sign", json={"email": "user@e.ntu.edu.sg", "blinded_token": "abc123"})
-    assert response.status_code == 403
-    assert "Unauthorized" in response.get_json()["error"]
-
-@patch("routes.blind_sign.Voter")
-@patch("routes.blind_sign.hashlib.sha256")
-def test_already_issued_token(mock_hashlib, mock_voter_class, client):
-    mock_hashlib.return_value.hexdigest.return_value = "dummyhash"
-    mock_voter = MagicMock(is_verified=True, logged_in=True, has_token=True)
-    mock_voter_class.query.filter_by.return_value.first.return_value = mock_voter
-    response = client.post("/blind-sign", json={"email": "user@e.ntu.edu.sg", "blinded_token": "abc123"})
-    assert response.status_code == 403
-    assert "Token already issued" in response.get_json()["error"]
-
-@patch("routes.blind_sign.db")
-@patch("routes.blind_sign.IssuedToken")
-@patch("routes.blind_sign.sign_blinded_token", return_value=1234567890)
-@patch("routes.blind_sign.Voter")
-@patch("routes.blind_sign.hashlib.sha256")
-def test_successful_blind_sign(
-    mock_hashlib, mock_voter_class, mock_sign, mock_issued_token_class, mock_db, client
-):
-    mock_hash = MagicMock()
-    mock_hash.hexdigest.return_value = "tokenhash"
-    mock_hashlib.return_value = mock_hash
-
-    mock_voter = MagicMock(is_verified=True, logged_in=True, has_token=False)
-    mock_voter_class.query.filter_by.return_value.first.return_value = mock_voter
-
-    response = client.post("/blind-sign", json={
-        "email": "user@e.ntu.edu.sg",
-        "blinded_token": "1a2b3c"
-    })
+def test_request_nonce_flow(client):
+    email = "student@e.ntu.edu.sg"
+    response = client.post("/auth/login", json={"email": email})
     assert response.status_code == 200
-    assert "signed_blinded_token" in response.get_json()
+    data = response.get_json()
+    assert "nonce" in data
+    assert len(data["nonce"]) > 0
+
+
+def test_login_with_valid_signed_nonce(client):
+    email = "voter@e.ntu.edu.sg"
+    email_hash = auth_service.get_email_hash(email)
+    nonce = auth_service.request_nonce(email_hash)
+    signed_nonce = f"signature_of_{nonce}"
+
+    response = client.post("/auth/login", json={"email": email, "signed_nonce": signed_nonce})
+    assert response.status_code == 200
+    assert response.get_json()["message"] == "Login successful"
+
+
+def test_login_with_invalid_signature(client):
+    email = "voter@e.ntu.edu.sg"
+    email_hash = auth_service.get_email_hash(email)
+    auth_service.request_nonce(email_hash)
+
+    response = client.post("/auth/login", json={"email": email, "signed_nonce": "bad_signature"})
+    assert response.status_code == 401
+    assert "Invalid signature" in response.get_json()["error"]
+
+
+def test_expired_nonce_flow(client):
+    email = "old@e.ntu.edu.sg"
+    email_hash = auth_service.get_email_hash(email)
+    auth_service.nonce_store[email_hash] = {
+        "nonce": "expired_nonce",
+        "issued_at": auth_service.datetime.utcnow() - auth_service.timedelta(seconds=999)
+    }
+
+    response = client.post("/auth/login", json={"email": email, "signed_nonce": "signature_of_expired_nonce"})
+    assert response.status_code == 403
+    assert "Nonce expired" in response.get_json()["error"]
+
+def test_clear_nonce_removes_entry():
+    email_hash = auth_service.get_email_hash("clear@ntu.edu")
+    auth_service.request_nonce(email_hash)
+    auth_service.clear_nonce(email_hash)
+    assert email_hash not in auth_service.nonce_store

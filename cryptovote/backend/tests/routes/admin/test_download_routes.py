@@ -32,3 +32,30 @@ def client(test_app):
         from routes.admin.download_routes import download_bp
         test_app.register_blueprint(download_bp, url_prefix="/admin")
         return test_app.test_client()
+
+@patch("routes.admin.download_routes.generate_report_file")
+def test_download_report_default_csv(mock_generate, client):
+    mock_generate.return_value = ("csv-content", 200)
+
+    with client.session_transaction() as sess:
+        sess["email"] = "admin@example.com"
+
+    response = client.get("/admin/download-report/election123")
+    
+    mock_generate.assert_called_once_with("election123", "csv", "admin@example.com", "127.0.0.1")
+    assert response.status_code == 200
+    assert b"csv-content" in response.data
+
+
+@patch("routes.admin.download_routes.generate_report_file")
+def test_download_report_pdf_format(mock_generate, client):
+    mock_generate.return_value = ("pdf-content", 200)
+
+    with client.session_transaction() as sess:
+        sess["email"] = "admin@example.com"
+
+    response = client.get("/admin/download-report/election456?format=pdf")
+
+    mock_generate.assert_called_once_with("election456", "pdf", "admin@example.com", "127.0.0.1")
+    assert response.status_code == 200
+    assert b"pdf-content" in response.data
