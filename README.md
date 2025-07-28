@@ -1,6 +1,6 @@
 # CryptoVote – Cryptographic Electronic Voting System (NTU FYP)
 
-**CryptoVote** is a secure, privacy-preserving e-voting prototype developed as a Final Year Project (FYP) at Nanyang Technological University (NTU), Singapore. It integrates advanced cryptographic techniques—digital signatures, blind signatures, and homomorphic encryption—across the full election lifecycle.
+**CryptoVote** is a secure, privacy-preserving e-voting prototype developed as a Final Year Project (FYP) at Nanyang Technological University (NTU), Singapore. It integrates advanced cryptographic techniques such as digital signatures, blind signatures, and homomorphic encryption that spans across the full election lifecycle.
 
 > ⚠️ For educational and research use only. Not suitable for real-world governmental deployments.
 
@@ -143,7 +143,7 @@ PYTHONPATH=. pytest --cov=cryptovote/backend cryptovote/backend/tests/ -v
 ```
 Run this at this directory:
 ```bash
-(venv) theawmaster@192 ~/TechStuff/NTU_AY2425_FYP/CryptoVote-FYPrefactor_ver_8 $ 
+/CryptoVote-FYPrefactor_ver_8 $ 
 ```
 
 Tests include:
