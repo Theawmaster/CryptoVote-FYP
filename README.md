@@ -152,7 +152,7 @@ PYTHONPATH=. pytest --cov=cryptovote/backend cryptovote/backend/tests/ -v
 ```
 Run this at this directory:
 ```bash
-(venv) theawmaster@192 ~/TechStuff/NTU_AY2425_FYP/CryptoVote-FYPrefactor_ver_8 $ 
+/CryptoVote-FYPrefactor_ver_8 $ 
 ```
 
 Tests include:
