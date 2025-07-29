@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import secureLogo from '../../assets/logo/secure.gif'; // update with actual path
+import secureLogo from '../../assets/logo/secure.gif'; 
 import '../../styles/onboarding.css';
 
 const Onboarding3: React.FC = () => {
@@ -9,14 +9,14 @@ const Onboarding3: React.FC = () => {
 
   return (
     <motion.div
-      className="onboarding-page relative flex flex-col justify-center items-center h-screen bg-white text-center px-6"
+      className="onboarding-page relative flex flex-col justify-center items-center h-screen bg-white dark:bg-gray-700 text-black dark:text-white text-center px-6"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.6, ease: 'easeInOut' }}
     >
 
-    <div className="bg-white p-4 rounded-lg shadow-md mb-10">
+    <div className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-md mb-10">
         <img
             src={secureLogo}
             alt="Secure Mechanism Logo"
@@ -24,11 +24,11 @@ const Onboarding3: React.FC = () => {
         />
     </div>
 
-      <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 mb-6">
+      <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 dark:text-gray-300 mb-6">
         Secure Mechanism
       </h2>
 
-      <p className="text-base md:text-lg text-gray-700 mb-16 max-w-3xl leading-relaxed text-left">
+      <p className="text-base md:text-lg text-gray-700 mb-16 max-w-3xl leading-relaxed dark:text-gray-200 text-center">
         State of the art cryptography methods like <span className="font-medium">homomorphic encryption</span>,
         <span className="font-medium">blind signature</span>, <span className="font-medium"> zero-knowledge proofs </span>
         and more to ensure the security and integrity of the voting process.

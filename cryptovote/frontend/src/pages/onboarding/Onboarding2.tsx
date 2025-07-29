@@ -9,7 +9,7 @@ const Onboarding2: React.FC = () => {
 
   return (
     <motion.div
-      className="onboarding-page relative flex flex-col justify-center items-center h-screen bg-white text-center px-6"
+      className="onboarding-page relative flex flex-col justify-center items-center h-screen bg-white dark:bg-gray-700 text-black dark:text-white text-center px-6"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -21,11 +21,11 @@ const Onboarding2: React.FC = () => {
         className="w-45 md:w-56 lg:w-64 mb-10 animate-pulse"
       />
 
-      <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 mb-6">
+      <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 dark:text-gray-300 mb-6">
         End-to-End Encryption
       </h2>
 
-      <p className="text-base md:text-lg text-gray-700 mb-16 max-w-5xl leading-relaxed text-left">
+      <p className="text-base md:text-lg text-gray-700 mb-16 max-w-5xl leading-relaxed dark:text-gray-200 text-center">
         Data is encrypted from the voter's device to the server. This ensures the transaction is not compromised.
       </p>
 

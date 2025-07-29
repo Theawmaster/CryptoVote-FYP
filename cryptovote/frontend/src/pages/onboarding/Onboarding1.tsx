@@ -10,7 +10,7 @@ const Onboarding1: React.FC = () => {
 
   return (
     <motion.div
-      className="onboarding-landing relative flex flex-col justify-center items-center h-screen bg-white text-center px-6"
+      className="onboarding-landing relative flex flex-col justify-center items-center h-screen bg-white dark:bg-gray-700 text-black dark:text-white text-center px-6"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
@@ -22,9 +22,9 @@ const Onboarding1: React.FC = () => {
         className="w-40 md:w-56 lg:w-64 mb-10 animate-bounce"
       />
 
-      <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 mb-6">Intuitive Process</h2>
+      <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 dark:text-gray-300 mb-6">Intuitive Process</h2>
 
-      <ol className="text-base md:text-lg text-gray-700 space-y-4 mb-16 max-w-2xl text-left leading-relaxed">
+      <ol className="text-base md:text-lg text-gray-700 space-y-4 mb-16 max-w-2xl text-left dark:text-gray-200 leading-relaxed">
         <li>1. Log in to begin voting process or register if you don't have an account.</li>
         <li>2. Click on your preferred candidate then submit it.</li>
         <li>3. Entire process would take less than 10 minutes.</li>
