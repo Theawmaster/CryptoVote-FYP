@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* src/styles/auth.css */
+@layer components {
+  /* ---------- PANES (full-height split) ---------- */
+
+  /* Base pane: straight center seam */
+  .auth-pane {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(1rem, 4vw, 2.5rem);
+    border-radius: 0;
+    background: #ffffff; /* light */
+  }
+  .dark .auth-pane { background: #374151; /* gray-700 */ }
+
+  /* Round ONLY the outer corners */
+  .auth-pane--left  { border-top-left-radius: 32px;  border-bottom-left-radius: 32px; }
+  .auth-pane--right { border-top-right-radius: 32px; border-bottom-right-radius: 32px; }
+
+  /* Light-mode gradients for subtle depth */
+  .auth-pane--left  { background: linear-gradient(135deg, #ffffff 0%, #f7fafc 100%); }
+  .auth-pane--right { background: linear-gradient(225deg, #ffffff 0%, #f7fafc 100%); }
+
+  /* Dark-mode: solid gray-700 */
+  .dark .auth-pane--left,
+  .dark .auth-pane--right { background: #374151; }
+
+  /* ---------- GLASS OVERLAY (covers inactive side) ---------- */
+
+  /* Fill the half exactly; straight center edge */
+  .auth-overlay {
+    position: absolute;
+    inset: 0;                 /* fills its 1/2 container exactly */
+    border-radius: 0;         /* no rounding at the seam */
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 18px 60px rgba(2, 6, 23, 0.15);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: rgba(255, 255, 255, 0.45);
+    will-change: transform, opacity;
+    backface-visibility: hidden; /* avoid hairline artifacts */
+    transform: translateZ(0);    /* GPU hint */
+  }
+  .dark .auth-overlay {
+    border-color: rgba(226, 232, 240, 0.12);
+    background: rgba(31, 41, 55, 0.35);
+  }
+
+  /* Only round outer corners (no margins) */
+  .auth-overlay--left  { border-top-left-radius: 28px; border-bottom-left-radius: 28px; }
+  .auth-overlay--right { border-top-right-radius: 28px; border-bottom-right-radius: 28px; }
+
+  /* ---------- HEADER (role select + tabs) ---------- */
+
+  .auth-header {
+    @apply fixed top-4 left-1/2 -translate-x-1/2 z-50;
+  }
+
+  .auth-bar {
+    @apply flex items-center gap-3
+           px-3 py-2 rounded-full
+           border border-teal-200 dark:border-teal-700
+           shadow-sm backdrop-blur transition-colors;
+    background: rgba(255, 255, 255, 0.70); /* light */
+  }
+  .dark .auth-bar { background: rgba(55, 65, 81, 0.80); } /* gray-700 w/ opacity */
+  .auth-bar:hover { @apply bg-teal-500; }
+  .dark .auth-bar:hover { @apply bg-teal-600; }
+
+  .auth-divider { @apply hidden sm:block w-px h-6 bg-gray-300 dark:bg-gray-600; }
+
+  /* ---------- Text helpers ---------- */
+  .auth-title  { letter-spacing: 0.2px; }
+  .auth-subtle { font-size: 0.75rem; color: #6b7280; }      /* gray-500 */
+  .dark .auth-subtle { color: #d1d5db; }                    /* gray-300 */
+}
+
+  

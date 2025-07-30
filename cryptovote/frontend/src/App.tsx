@@ -8,6 +8,9 @@ import Onboarding2 from './pages/onboarding/Onboarding2';
 import Onboarding3 from './pages/onboarding/Onboarding3';
 import Onboarding4 from './pages/onboarding/Onboarding4';
 
+import VoterAuth from './pages/voter/VoterAuth';
+import AdminLogin from './pages/admin-dev/AdminLogin';
+
 function AnimatedRoutes() {
   const location = useLocation();
 
@@ -19,6 +22,10 @@ function AnimatedRoutes() {
         <Route path="/onboarding/2" element={<Onboarding2 />} />
         <Route path="/onboarding/3" element={<Onboarding3 />} />
         <Route path="/onboarding/4" element={<Onboarding4 />} />
+
+        <Route path="/auth" element={<VoterAuth />} />
+        <Route path="/auth/voter" element={<VoterAuth />} />
+        <Route path="/auth/admin" element={<AdminLogin />} />
       </Routes>
     </AnimatePresence>
   );
