@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* src/styles/auth.css */
 @layer components {
   /* ---------- PANES (full-height split) ---------- */
 
@@ -40,14 +39,14 @@
     -webkit-backdrop-filter: blur(10px);
     box-shadow: 0 18px 60px rgba(2, 6, 23, 0.15);
     border: 1px solid rgba(15, 23, 42, 0.08);
-    background: rgba(255, 255, 255, 0.45);
+    background: rgba(6, 198, 176, 0.45);
     will-change: transform, opacity;
     backface-visibility: hidden; /* avoid hairline artifacts */
     transform: translateZ(0);    /* GPU hint */
   }
   .dark .auth-overlay {
     border-color: rgba(226, 232, 240, 0.12);
-    background: rgba(31, 41, 55, 0.35);
+    background: rgba(3, 133, 150, 0.35);
   }
 
   /* Only round outer corners (no margins) */
@@ -65,9 +64,9 @@
            px-3 py-2 rounded-full
            border border-teal-200 dark:border-teal-700
            shadow-sm backdrop-blur transition-colors;
-    background: rgba(255, 255, 255, 0.70); /* light */
+    background: rgba(4, 223, 205, 0.69); /* light */
   }
-  .dark .auth-bar { background: rgba(55, 65, 81, 0.80); } /* gray-700 w/ opacity */
+  .dark .auth-bar { background: rgba(2, 88, 91, 0.8); } /* gray-700 w/ opacity */
   .auth-bar:hover { @apply bg-teal-500; }
   .dark .auth-bar:hover { @apply bg-teal-600; }
 
