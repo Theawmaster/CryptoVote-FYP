@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    /* Full-screen page shell (what was on the outer motion div) */
+    .auth-screen {
+      @apply relative h-screen w-screen overflow-hidden
+             bg-white dark:bg-gray-700 text-black dark:text-white;
+    }
+  
+    /* Two-column split that collapses to two rows on small screens */
+    .auth-split {
+      @apply relative grid grid-rows-[1fr,1fr] md:grid-rows-1 md:grid-cols-2 h-full w-full;
+    }
+  
+    /* Common inner content frame used in both panels */
+    .auth-panel {
+      @apply w-full max-w-md relative z-20;
+    }
+  
+    /* Illustration/GIF sizing used on both sides */
+    .auth-illust {
+      @apply mx-auto h-auto w-40 sm:w-44 md:w-48;
+    }
+  
+    /* Section heading */
+    .auth-h2 {
+      @apply text-2xl md:text-3xl font-semibold mb-4;
+    }
+  
+    /* Body copy under heading */
+    .auth-copy {
+      @apply text-sm md:text-base text-gray-600 dark:text-gray-300 mb-6;
+    }
+  
+    /* Primary CTA button */
+    .auth-cta {
+      @apply px-5 py-2 rounded bg-teal-600 text-white hover:bg-teal-700;
+    }
+  
+    /* Wrapper for the frosted overlay (the half-width glass) */
+    .auth-overlay-wrap {
+      @apply absolute inset-y-0 left-0 hidden md:block w-1/2 pointer-events-none z-10;
+    }
+  }
+
+  /* ---- Forms (Register & Login) ---- */
+@layer components {
+    .auth-form {
+      @apply space-y-3;
+    }
+  
+    .auth-form-title {
+      @apply text-lg font-semibold;
+    }
+  
+    .auth-input {
+      @apply w-full px-3 py-2 rounded
+             border border-gray-300 dark:border-gray-700
+             bg-white dark:bg-gray-800;
+    }
+  
+    .auth-row {
+      @apply flex gap-2;
+    }
+  
+    .auth-row-btn {
+      @apply px-3 py-2 rounded
+             bg-gray-200 dark:bg-gray-700;
+    }
+  
+    .auth-submit {
+      @apply w-full py-2 rounded
+             bg-teal-600 text-white hover:bg-teal-500;
+    }
+  }
+  

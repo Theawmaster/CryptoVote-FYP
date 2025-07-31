@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    /* Page shell */
+    .admin-screen {
+      @apply relative min-h-screen flex items-center justify-center
+             bg-white dark:bg-gray-700 text-black dark:text-white px-4;
+    }
+  
+    /* Centered card */
+    .admin-card {
+      @apply w-full max-w-md rounded-2xl shadow-xl p-8
+             bg-gray-50 dark:bg-gray-700
+             border border-gray-200 dark:border-gray-700;
+    }
+  
+    /* Heading inside the card */
+    .admin-title {
+      @apply text-xl font-semibold mb-4;
+    }
+  
+    /* Inputs */
+    .admin-input {
+      @apply w-full px-3 py-2 rounded
+             border border-gray-300 dark:border-gray-700
+             bg-white dark:bg-gray-800;
+    }
+  
+    /* OTP row */
+    .admin-otp-row {
+      @apply flex gap-2 mb-4;
+    }
+    .admin-otp-btn {
+      @apply px-3 py-2 rounded
+             bg-gray-200 dark:bg-gray-500 text-gray-800 dark:text-gray-200
+             hover:bg-teal-400 hover:text-white dark:hover:bg-teal-400;
+    }
+  
+    /* Submit */
+    .admin-submit {
+      @apply w-full py-2 rounded
+             bg-teal-600 text-white hover:bg-teal-500;
+    }
+  }
+  

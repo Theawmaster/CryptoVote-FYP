@@ -1,4 +1,6 @@
 import React from 'react';
+import '../styles/auth.css';
+import '../styles/voter-auth.css';
 
 type Props = { onSubmit?: () => void };
 
@@ -8,22 +10,22 @@ const RegisterForm: React.FC<Props> = ({ onSubmit }) => (
     <input
       type="email"
       placeholder="Enter NTU email"
-      className="w-full px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
+      className="auth-input"
     />
-    <div className="flex gap-2">
+    <div className="auth-row">
       <input
         type="text"
         placeholder="Enter OTP"
-        className="flex-1 px-3 py-2 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800"
+        className="auth-input flex-1"
       />
-      <button type="button" className="px-3 py-2 rounded bg-gray-200 dark:bg-gray-700">
+      <button type="button" className="auth-row-btn">
         Get OTP
       </button>
     </div>
     <button
       type="button"
       onClick={onSubmit}
-      className="w-full py-2 rounded bg-teal-600 text-white hover:bg-teal-500"
+      className="auth-submit"
     >
       Verify & Register
     </button>
