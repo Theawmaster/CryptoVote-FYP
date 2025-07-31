@@ -9,6 +9,7 @@ from routes.blind_sign import blind_sign_bp
 from routes.admin_routes import admin_bp
 from dotenv import load_dotenv
 from utilities.network_utils import is_ntu_ip
+from flask_cors import CORS 
 import os
 
 # Load environment variables
@@ -19,6 +20,12 @@ TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "templates")
 app = Flask(__name__, template_folder=TEMPLATES_DIR)
 app.config.from_pyfile("config.py")
 app.secret_key = os.getenv("SECRET_KEY")
+
+CORS(
+    app,
+    resources={r"/*": {"origins": "http://localhost:3000"}},
+    supports_credentials=False,  # set True later you use cookies
+)
 
 # Init DB
 db.init_app(app)
@@ -35,7 +42,7 @@ app.register_blueprint(admin_bp, url_prefix="/admin")
 # IP Restriction Middleware
 @app.before_request
 def restrict_to_ntu_wifi():
-    # 🧪 Bypass in development mode
+    # Bypass in development mode
     if os.getenv("FLASK_ENV") == "development" or app.debug:
         return
 

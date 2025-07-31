@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, session
-from cryptovote.backend.utilities.anomaly_utils import flag_suspicious_activity
+from utilities.anomaly_utils import flag_suspicious_activity
 from services.auth_service import (
     get_email_hash, request_nonce, validate_nonce, clear_nonce
 )
@@ -8,6 +8,9 @@ from models.voter import Voter
 from models.db import db
 from datetime import datetime
 from utilities.anomaly_utils import flag_suspicious_activity, failed_logins_last_10min
+from _zoneinfo import ZoneInfo
+
+SGT = ZoneInfo("Asia/Singapore")
 
 auth_bp = Blueprint('login', __name__)
 
@@ -52,9 +55,9 @@ def login():
     try:
         voter.logged_in = True
         voter.last_login_ip = request.remote_addr
-        voter.last_login_at = datetime.utcnow()
+        voter.last_login_at = datetime.now(SGT)
         db.session.commit()
-        print(f"✅ [{datetime.utcnow()}] Login successful for {email_hash}")
+        print(f"✅ [{datetime.now(SGT)}] Login successful for {email_hash}")
         return jsonify({'message': 'Signature verified. Login successful.'}), 200
     except Exception as e:
         db.session.rollback()

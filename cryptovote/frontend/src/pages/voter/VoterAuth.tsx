@@ -115,7 +115,7 @@ const VoterAuth: React.FC = () => {
               />
               <RegisterForm onSubmit={() => console.log('register submit')} />
               <p className="auth-subtle mt-4">
-                Only NTU emails are allowed. OTP will be sent to your inbox.
+                Upon verification of token, please proceed to log in.
               </p>
             </div>
           ) : (
