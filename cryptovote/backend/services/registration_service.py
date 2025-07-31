@@ -9,8 +9,6 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 
 def handle_registration(email: str, vote_role="voter"):
-    if not email.endswith("@e.ntu.edu.sg"):
-        return jsonify({"error": "Invalid email domain"}), 400
 
     email_hash = hashlib.sha256(email.encode()).hexdigest()
     voter = Voter.query.filter_by(email_hash=email_hash).first()

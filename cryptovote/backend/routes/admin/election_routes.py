@@ -1,6 +1,6 @@
 import email
 from flask import Blueprint, request, jsonify, session
-from cryptovote.backend.utilities.anomaly_utils import flag_suspicious_activity
+from utilities.anomaly_utils import flag_suspicious_activity
 from services.election_service import start_election_by_id, end_election_by_id, get_election_status_by_id, create_new_election
 from utilities.auth_utils import role_required
 

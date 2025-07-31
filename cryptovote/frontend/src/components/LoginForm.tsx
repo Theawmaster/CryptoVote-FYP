@@ -6,7 +6,7 @@ import '../styles/voter-auth.css';
 type Props = { onSubmit?: () => void };
 
 const LoginForm: React.FC<Props> = ({ onSubmit }) => (
-  <form className="auth-submit ">
+  <form className="auth-form">
     <div className="auth-form-title">Welcome back</div>
     <input
       type="email"

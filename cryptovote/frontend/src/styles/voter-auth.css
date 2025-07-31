@@ -67,7 +67,8 @@
   
     .auth-row-btn {
       @apply px-3 py-2 rounded
-             bg-gray-200 dark:bg-gray-700;
+            bg-gray-200 dark:bg-gray-500 text-gray-800 dark:text-gray-200
+            hover:bg-teal-400 hover:text-white dark:hover:bg-teal-400;
     }
   
     .auth-submit {

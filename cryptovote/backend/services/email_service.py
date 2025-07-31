@@ -4,11 +4,14 @@ from email.message import EmailMessage
 
 SMTP_EMAIL = os.getenv("SMTP_EMAIL")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
-BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:5000")  # fallback
+BASE_URL = os.getenv("BASE_URL", "http://127.0.0.1:5010")  # fallback
+
 
 def send_verification_email(email, token):
     msg = EmailMessage()
-    msg.set_content(f"Click to verify: {BASE_URL}/register/verify-email?token={token}")
+    msg.set_content(
+        f"Copy this token to verify your email: {token}\n"
+    )
     msg['Subject'] = "Voting Registration Token"
     msg['From'] = SMTP_EMAIL
     msg['To'] = email

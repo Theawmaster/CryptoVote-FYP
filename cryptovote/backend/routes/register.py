@@ -11,6 +11,14 @@ def register():
     data = request.json
     email = data.get("email")
     vote_role = data.get("vote_role", "voter")
+    
+    if not email or not vote_role:
+        return jsonify(error="missing_fields",
+                       message="Please fill up the required field"), 400
+    
+    if not email.endswith("@e.ntu.edu.sg"):
+        return jsonify({"error": "Invalid email domain"}), 400
+    
     return handle_registration(email, vote_role)
 
 @register_bp.route('/verify-email')
