@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* Container for input + button */
+  .register-row {
+    @apply flex gap-2;
+  }
+
+  /* Email or token input field */
+  .register-input {
+    @apply w-full flex-1 px-3 py-2 rounded
+           border border-gray-300 dark:border-gray-700
+           bg-white dark:bg-gray-800;
+  }
+
+  /* Verify button */
+  .register-btn {
+    @apply px-3 py-2 rounded
+           bg-gray-200 dark:bg-gray-500 text-gray-800 dark:text-gray-200
+           hover:bg-teal-400 hover:text-white dark:hover:bg-teal-400
+           disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+
+  /* Button content when loading */
+  .register-btn-content {
+    @apply flex items-center gap-2;
+  }
+}

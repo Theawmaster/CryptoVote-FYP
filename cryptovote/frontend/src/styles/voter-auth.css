@@ -37,11 +37,13 @@
     /* Primary CTA button */
     .auth-cta {
       @apply px-5 py-2 rounded bg-teal-600 text-white hover:bg-teal-700;
+      margin-right: 3rem; /* space between buttons */
     }
   
     /* Wrapper for the frosted overlay (the half-width glass) */
     .auth-overlay-wrap {
       @apply absolute inset-y-0 left-0 hidden md:block w-1/2 pointer-events-none z-10;
+      z-index: 1
     }
   }
 
@@ -72,7 +74,7 @@
     }
   
     .auth-submit {
-      @apply w-full py-2 rounded
+      @apply px-4 py-2 rounded
              bg-teal-600 text-white hover:bg-teal-500;
     }
 
@@ -92,5 +94,8 @@
       .auth-modal-card {
         @apply bg-white dark:bg-gray-800 rounded-xl p-6 shadow-2xl w-full max-w-sm text-center;
       }
+
+      
+
   }
   

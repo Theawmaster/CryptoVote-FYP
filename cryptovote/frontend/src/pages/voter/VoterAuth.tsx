@@ -8,12 +8,14 @@ import RegisterForm from '../../components/RegisterForm';
 import LoginForm from '../../components/LoginForm';
 import '../../styles/auth.css';
 import '../../styles/voter-auth.css';
+// import ConfirmationModal from '../../components/auth/ConfirmationModal';
+import ContactUsButton from '../../services/ContactUsButton';
 
 type Mode = 'register' | 'login';
 
 const LoginCTA: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   <div className="auth-panel">
-    <Brand />
+    <Brand title="Voter Authentication" />
     <h2 className="auth-h2">Welcome back!</h2>
     <p className="auth-copy">
       Click the button below to get yourself logged in to start voting!
@@ -24,6 +26,7 @@ const LoginCTA: React.FC<{ onClick: () => void }> = ({ onClick }) => (
     >
       Go to log in
     </button>
+    <ContactUsButton />
   </div>
 );
 
@@ -40,6 +43,7 @@ const RegisterCTA: React.FC<{ onClick: () => void }> = ({ onClick }) => (
     >
       Go to register
     </button>
+    <ContactUsButton />
   </div>
 );
 
