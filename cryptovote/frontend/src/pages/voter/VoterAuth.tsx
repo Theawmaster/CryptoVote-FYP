@@ -95,7 +95,7 @@ const VoterAuth: React.FC = () => {
                 alt="Register Logo"
                 className="auth-illust"
               />
-              <LoginForm onSubmit={() => console.log('login submit')} />
+              <LoginForm />
               <p className="auth-subtle mt-4">
                 Returning voters can log in directly with OTP.
               </p>
