@@ -1,5 +1,6 @@
 import React from 'react';
 import Spinner from '../ui/Spinner';
+import '../../styles/register-row.css'; // <-- import the new CSS
 
 type Props = {
   token: string;
@@ -10,13 +11,13 @@ type Props = {
 
 const RegisterTokenRow: React.FC<Props> = ({ token, setToken, loading, onVerify }) => {
   return (
-    <div className="auth-row">
+    <div className="register-row">
       <input
         type="text"
         placeholder="Paste Token here"
         value={token}
         onChange={(e) => setToken(e.target.value)}
-        className="auth-input flex-1"
+        className="register-input"
         inputMode="text"
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
@@ -29,11 +30,11 @@ const RegisterTokenRow: React.FC<Props> = ({ token, setToken, loading, onVerify 
         type="button"
         onClick={onVerify}
         disabled={loading}
-        className="auth-row-btn disabled:opacity-60 disabled:cursor-not-allowed"
+        className="register-btn"
         aria-busy={loading}
       >
         {loading ? (
-          <span className="flex items-center gap-2">
+          <span className="register-btn-content">
             <Spinner />
             <span>Verifying…</span>
           </span>

@@ -58,8 +58,8 @@ export function openPassphraseModal({
       }, []);
 
       return (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg w-full max-w-md">
+        <div className="auth-modal-overlay">
+          <div className="auth-modal-card">
             <h2 className="text-lg font-bold mb-2">
               {mode === 'set' ? 'Set Passphrase' : 'Enter Passphrase'}
             </h2>
@@ -78,20 +78,10 @@ export function openPassphraseModal({
                 setPass1(e.target.value);
                 if (error) setError('');
               }}
-              className="auth-input mb-2 w-full"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  if (mode === 'get') {
-                    handleSubmit();
-                  } else if (mode === 'set' && confirmInputRef.current) {
-                    confirmInputRef.current.focus();
-                  }
-                }
-              }}
+              className="auth-input mb-2"
             />
 
-            {/* Second input only in registration */}
+            {/* Second input only for registration */}
             {mode === 'set' && (
               <input
                 type="password"
@@ -102,13 +92,7 @@ export function openPassphraseModal({
                   setPass2(e.target.value);
                   if (error) setError('');
                 }}
-                className="auth-input mb-2 w-full"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSubmit();
-                  }
-                }}
+                className="auth-input mb-2"
               />
             )}
 
@@ -117,14 +101,13 @@ export function openPassphraseModal({
             <div className="flex justify-end gap-2">
               <button
                 onClick={handleCancel}
-                className="px-3 py-2 rounded bg-gray-200 dark:bg-gray-500 text-gray-800 dark:text-gray-200
-                  hover:bg-teal-400 hover:text-white dark:hover:bg-teal-400"
+                className="auth-row-btn"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
-                className="w-full py-2 rounded bg-teal-600 hover:bg-teal-500 dark:hover:bg-teal-500 text-white"
+                className="auth-submit"
               >
                 Save
               </button>
