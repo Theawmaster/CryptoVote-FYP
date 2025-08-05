@@ -2,7 +2,7 @@ from flask import Blueprint, request
 from services.registration_service import handle_registration
 from models.voter import db, Voter
 from flask import jsonify
-import pyotp
+import pyotp, hashlib
 
 register_bp = Blueprint('register', __name__)
 
@@ -47,3 +47,20 @@ def verify_email():
         "message": "Email verified successfully.",
         "totp_uri": totp_uri
     })
+
+@register_bp.route('/cancel', methods=['POST'])
+def cancel_registration():
+    data = request.json
+    email = data.get("email")
+    if not email:
+        return jsonify({"error": "missing_email"}), 400
+
+    email_hash = hashlib.sha256(email.encode()).hexdigest()
+    voter = Voter.query.filter_by(email_hash=email_hash, is_verified=False).first()
+
+    if not voter:
+        return jsonify({"error": "no_unverified_voter_found"}), 404
+
+    db.session.delete(voter)
+    db.session.commit()
+    return jsonify({"message": "Registration cancelled and record deleted."}), 200

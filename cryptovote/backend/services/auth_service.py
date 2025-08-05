@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta
 from models.voter import Voter
 from services.registration_service import generate_nonce, verify_voter_signature
+from _zoneinfo import ZoneInfo
+
+SGT = ZoneInfo("Asia/Singapore")
 
 # In-memory nonce store
 nonce_store = {}
@@ -15,7 +18,7 @@ def request_nonce(email_hash):
     nonce = generate_nonce()
     nonce_store[email_hash] = {
         'nonce': nonce,
-        'issued_at': datetime.utcnow()
+        'issued_at': datetime.now(SGT)
     }
     return nonce
 
@@ -24,7 +27,7 @@ def validate_nonce(email_hash):
     if not record:
         return None, 'Nonce not found or expired'
     
-    if datetime.utcnow() - record['issued_at'] > timedelta(seconds=NONCE_TTL_SECONDS):
+    if datetime.now(SGT) - record['issued_at'] > timedelta(seconds=NONCE_TTL_SECONDS):
         del nonce_store[email_hash]
         return None, 'Nonce expired. Please retry authentication.'
 

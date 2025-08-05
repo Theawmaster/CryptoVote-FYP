@@ -75,5 +75,22 @@
       @apply w-full py-2 rounded
              bg-teal-600 text-white hover:bg-teal-500;
     }
+
+    .auth-toast {
+        @apply fixed left-1/2 -translate-x-1/2 bottom-6
+               px-4 py-3 rounded-lg shadow-lg text-white z-50;
+      }
+      .auth-toast--success { @apply bg-teal-600; }
+      .auth-toast--error   { @apply bg-red-600; }
+      .auth-toast--info { @apply bg-blue-600 }
+    
+      /* Modal overlay and card */
+      .auth-modal-overlay {
+        @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4;
+      }
+      
+      .auth-modal-card {
+        @apply bg-white dark:bg-gray-800 rounded-xl p-6 shadow-2xl w-full max-w-sm text-center;
+      }
   }
   

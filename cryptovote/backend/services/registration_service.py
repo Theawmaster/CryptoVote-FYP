@@ -56,7 +56,7 @@ def handle_registration(email: str, vote_role="voter"):
         print(f"[ERROR] Failed to register new voter: {e}")
         return jsonify({"error": "Internal error occurred"}), 500
 
-# 🔐 Signature Verification Function
+# Signature Verification Function
 def verify_voter_signature(email: str, signed_nonce_b64: str, nonce: str):
     try:
         email_hash = hashlib.sha256(email.encode()).hexdigest()
@@ -81,6 +81,6 @@ def verify_voter_signature(email: str, signed_nonce_b64: str, nonce: str):
         print(f"[AUTH ERROR] Signature verification failed: {e}")
         return False, "Invalid signature"
 
-# 🔑 Generate Nonce Function
+# Generate Nonce Function
 def generate_nonce(length=32):
     return base64.b64encode(os.urandom(length)).decode('utf-8')

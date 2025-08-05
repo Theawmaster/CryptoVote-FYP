@@ -36,17 +36,20 @@ def login():
         nonce = request_nonce(email_hash)
         return jsonify({'nonce': nonce})
 
+
     # Step 2: Validate and verify
     nonce, error = validate_nonce(email_hash)
     if error:
         return jsonify({'error': error}), 403
 
     success, msg = verify_voter_signature(email, signed_nonce, nonce)
+    print("Backend received signed_nonce:", signed_nonce)
+    print("Backend received nonce:", repr(nonce))
     if not success:
         flag_suspicious_activity(email, request.remote_addr, "Failed login attempt", "/login")
         
         if failed_logins_last_10min(request.remote_addr) > 3:
-            flag_suspicious_activity(email, request.remote_addr, "⚠️ Multiple failed logins from same IP", "/login")
+            flag_suspicious_activity(email, request.remote_addr, "Multiple failed logins from same IP", "/login")
         
         return jsonify({'error': msg}), 401
 
@@ -84,5 +87,5 @@ def dev_login_admin():
         return jsonify({"message": f"Dev login successful as admin: {email_hash}"}), 200
 
     except Exception as e:
-        print(f"💥 Error in /dev-login-admin: {e}")
+        print(f" Error in /dev-login-admin: {e}")
         return jsonify({"error": "Internal server error"}), 500
