@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
-import '../styles/auth.css';
-import '../styles/voter-auth.css';
+import '../../styles/auth.css';
+import '../../styles/voter-auth.css';
 
-import RegisterEmailRow from '../components/auth/RegisterEmailRow';
-import RegisterTokenRow from '../components/auth/RegisterTokenRow';
-import Toast from '../components/ui/Toast';
-import QrModal from '../components/auth/QrModal';
+import RegisterEmailRow from '../../components/auth/RegisterEmailRow';
+import RegisterTokenRow from '../../components/auth/RegisterTokenRow';
+import Toast from '../../components/ui/Toast';
+import QrModal from '../../components/auth/QrModal';
 
-import { openPassphraseModal } from '../components/auth/PassphraseModal';
-import { encryptPrivateKey, downloadPem, decryptPrivateKey } from '../utils/crypto-utils';
-import { saveToIndexedDB } from '../utils/indexeddb-utils';
+import { openPassphraseModal } from '../../components/auth/PassphraseModal';
+import { encryptPrivateKey, downloadPem, decryptPrivateKey } from '../../utils/crypto-utils';
+import { saveToIndexedDB } from '../../utils/indexeddb-utils';
 
 type Props = { onSubmit?: () => void };
 
-const REGISTER_URL = 'http://localhost:5010/register/';
-const VERIFY_URL = 'http://localhost:5010/register/verify-email';
+const REGISTER_URL = '/register/';
+const VERIFY_URL = '/register/verify-email';
 
 
 const RegisterForm: React.FC<Props> = ({ onSubmit }) => {

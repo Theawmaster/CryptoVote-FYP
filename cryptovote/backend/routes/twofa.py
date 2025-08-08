@@ -44,12 +44,16 @@ def verify_2fa():
 
         session["email"] = voter.email_hash
         session["role"] = voter.vote_role
+        session["twofa"] = True 
+        session.modified = True
+        
+        
 
         print(f"✅ 2FA success. Set vote_status for {email_hash} at {now}")  # For Debugging
         print("Session after login:", session)
 
         db.session.commit()
-        return jsonify({'message': '2FA successful. Access granted.'}), 200
+        return jsonify({'message': '2FA successful. Access granted.', 'role': voter.vote_role}), 200
     else:
         otp_cooldown[email_hash] = now
         return jsonify({'error': 'Invalid OTP'}), 401

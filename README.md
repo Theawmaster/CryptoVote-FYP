@@ -1,6 +1,7 @@
 # CryptoVote – Cryptographic Electronic Voting System (NTU FYP)
 
-**CryptoVote** is a secure, privacy-preserving e-voting prototype developed as a Final Year Project (FYP) at Nanyang Technological University (NTU), Singapore. It integrates advanced cryptographic techniques such as digital signatures, blind signatures, and homomorphic encryption that spans across the full election lifecycle.
+**CryptoVote** is a secure, privacy-preserving e-voting prototype developed as a Final Year Project (FYP) at Nanyang Technological University (NTU), Singapore.  
+It integrates advanced cryptographic techniques such as **digital signatures**, **blind signatures**, and **homomorphic encryption**, covering the **full election lifecycle**.
 
 > ⚠️ For educational and research use only. Not suitable for real-world governmental deployments.
 
@@ -21,7 +22,7 @@
 | Pillar              | Implementation Highlights                                                       |
 |---------------------|----------------------------------------------------------------------------------|
 | **Confidentiality** | Paillier Homomorphic Encryption ensures votes stay secret                        |
-| **Authenticity**    | Digital Signature (RSA/ECDSA) + OTP (2FA) + Voter Nonce                         |
+| **Authenticity**    | Digital Signature (RSA/ECDSA) + OTP (2FA) + Voter Nonce                          |
 | **Anonymity**       | Blinded Token issuance breaks voter–vote linkage                                |
 | **Auditability**    | ZKPs for vote proof, CSV/PDF logs, and election trail                           |
 | **Integrity**       | Database-stored timestamps, token reuse prevention, admin action logging        |
@@ -30,14 +31,14 @@
 
 ## Tech Stack
 
-| Layer         | Technology                                                |
-|---------------|-----------------------------------------------------------|
-| Frontend      | *(Planned)* Vue.js or React.js                           |
-| Backend       | Flask (Python)                                            |
-| Cryptography  | `PyCryptodome`, `phe` (Paillier), `PyOTP`                 |
-| Auth          | RSA / ECDSA Digital Signatures, Blind Signatures         |
-| Database      | PostgreSQL + pgAdmin                                      |
-| Reports       | PDFKit (wkhtmltopdf), CSV, Flask Templates                |
+| Layer         | Technology                                                                 |
+|---------------|-----------------------------------------------------------------------------|
+| **Frontend**  | React.js + TypeScript, Framer Motion, Tailwind CSS, React Router v6         |
+| **Backend**   | Flask (Python)                                                              |
+| **Cryptography** | `PyCryptodome`, `phe` (Paillier), `PyOTP`                                 |
+| **Auth**      | RSA / ECDSA Digital Signatures, Blind Signatures                            |
+| **Database**  | PostgreSQL + pgAdmin                                                         |
+| **Reports**   | PDFKit (wkhtmltopdf), CSV, Flask Templates                                   |
 
 ---
 
@@ -83,6 +84,8 @@
    - Votes stored in `encrypted_candidate_votes` table
    - Tokens marked as used in `issued_tokens`
 
+---
+
 ### Admin Operation Flow
 
 1. **Start Election**
@@ -122,7 +125,55 @@
    GET /admin/verify-proof
    ```
 
+8. **Remove PEM cache on browser**
+   ```
+   indexedDB.deleteDatabase('CryptoVoteDB'); // Do it on console dev tools
+   indexedDB.deleteDatabase('cryptoVoteKeys');
+   ```
+
 ---
+
+## Frontend Progress (as of Aug 2025)
+
+### Pages Implemented
+
+| Page               | Route            | Status   | Notes                                                   |
+|--------------------|------------------|----------|---------------------------------------------------------|
+| Onboarding Landing | `/`              | ✅ Done  | Framer motion fade, click-to-continue, dark mode        |
+| Onboarding 1       | `/onboarding/1`  | ✅ Done  | Intuitive voting process explanation                    |
+| Onboarding 2       | `/onboarding/2`  | ✅ Done  | End-to-end encryption explanation                       |
+| Onboarding 3       | `/onboarding/3`  | ✅ Done  | Structure + animations                                  |
+| Onboarding 4       | `/onboarding/4`  | ✅ Done  | Structure + animations                                  |
+| Voter Auth         | `/auth/voter`    | 🚧 WIP   | Email/token verification UI, modal layering fix pending |
+
+---
+
+### Theming & UI
+
+- **Dark Mode Toggle** – Persistent state, Framer Motion transitions  
+- **Animations** – Page transitions via `AnimatePresence`  
+- **Responsive Images** – NTU & CryptoVote logos scale correctly  
+- **Hover Feedback** – Tailwind `dark:hover` variants applied  
+- **Border Gap Fixes** – Full-bleed dark background via `html, body` styles
+
+---
+
+### Routing Structure
+
+Implemented with **React Router v6**:
+
+```tsx
+<AnimatePresence mode="wait">
+  <Routes location={location} key={location.pathname}>
+    <Route path="/" element={<OnboardingLanding />} />
+    <Route path="/onboarding/1" element={<Onboarding1 />} />
+    ...
+  </Routes>
+</AnimatePresence>
+```
+
+---
+
 
 ## Database Schema Summary
 
@@ -141,61 +192,25 @@
 ```bash
 PYTHONPATH=. pytest --cov=cryptovote/backend cryptovote/backend/tests/ -v
 ```
-Run this at this directory:
-```bash
-/CryptoVote-FYPrefactor_ver_8 $ 
-```
 
-Tests include:
-- Voter registration and OTP flow
-- Token issuance and verification
-- Vote encryption and replay protection
+Backend tests include:
+- Voter registration & OTP flow
+- Token issuance & verification
+- Vote encryption & replay protection
 - Election state transitions
-- ZKP generation and tally checks
-- Admin action logging and audit validation
-- Full coverage for `/login`, blind signature utils, and `audit_service.py`
+- ZKP generation & tally checks
+- Admin logging & audit validation
 
-> ✅ Current backend test coverage exceeds **secure e-voting standard**, with comprehensive unit tests and mocking.
-
----
-
-## Audit Reports
-
-Download audit trail:
-```
-GET /admin/download-report/<election_id>?format=csv
-GET /admin/download-report/<election_id>?format=pdf
-```
-
-PDF includes:
-- Timestamp
-- Candidate tallies
-- Commitment hash and proof
-- NTU Branding
-
----
-
-## Local Development Setup
-
-```bash
-git clone https://github.com/yourusername/CryptoVote-FYP.git
-cd CryptoVote-FYP/backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python app.py
-```
+Frontend tests (planned):
+- Component rendering snapshots
+- Animation presence checks
+- Auth page validation
 
 ---
 
 ## License
 
 Licensed under the **GNU Affero General Public License v3.0 (AGPLv3)**.
-
-- ✅ Free for academic & commercial use  
-- ✅ Modifications allowed  
-- ❌ Cannot run privately without disclosing source code  
-- ✅ Must retain original license  
 
 [Full License Terms →](https://www.gnu.org/licenses/agpl-3.0.html)
 

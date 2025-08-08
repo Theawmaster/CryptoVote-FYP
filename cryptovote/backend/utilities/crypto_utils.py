@@ -38,6 +38,9 @@
 
 #     return private_pem.decode("utf-8"), public_pem.decode("utf-8")
 
+# Version 2.0
+# This version uses PKCS#8 format for the private key, which is compatible with browser
+# crypto.subtle APIs. It also allows for optional encryption of the private key with a pass
 
 import os
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -45,7 +48,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
 
 
-def generate_rsa_key_pair(save_to_disk=False, passphrase: str = None):
+def generate_rsa_key_pair(save_to_disk=True, passphrase: str = None):
     """
     Generate an RSA key pair in PKCS#8 format (compatible with browser crypto.subtle).
     
