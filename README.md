@@ -125,6 +125,12 @@ It integrates advanced cryptographic techniques such as **digital signatures**, 
    GET /admin/verify-proof
    ```
 
+8. **Remove PEM cache on browser**
+   ```
+   indexedDB.deleteDatabase('CryptoVoteDB'); // Do it on console dev tools
+   indexedDB.deleteDatabase('cryptoVoteKeys');
+   ```
+
 ---
 
 ## Frontend Progress (as of Aug 2025)
@@ -168,18 +174,6 @@ Implemented with **React Router v6**:
 
 ---
 
-### Upcoming Frontend Tasks
-
-| Feature                        | Priority | Notes                                         |
-|--------------------------------|----------|-----------------------------------------------|
-| Onboarding Carousel Indicator  | Medium   | Progress dots or “Step X of Y”                |
-| CTA Button Styling             | Low      | Ripple or bounce animation                    |
-| Authentication Integration     | High     | Secure link to backend auth flow              |
-| Mobile View Optimization       | Medium   | Ensure scaling on iPhones & tablets           |
-| Unit/UI Testing                | Medium   | RTL & Vitest snapshots for onboarding pages   |
-| Language Toggle (Optional)     | Low      | Multilingual onboarding                       |
-
----
 
 ## Database Schema Summary
 

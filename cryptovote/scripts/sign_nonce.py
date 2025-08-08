@@ -40,4 +40,4 @@ if __name__ == "__main__":
 
 
 # To run the script, use the following command:
-# python scripts/sign_nonce.py --key scripts/mykey.pem --nonce "your_nonce_here"
+# python scripts/sign_nonce.py --key keys/mykey.pem --nonce "your_nonce_here"

@@ -12,3 +12,6 @@ class Election(db.Model):
     has_started = db.Column(db.Boolean, default=False)
     has_ended = db.Column(db.Boolean, default=False)
     tally_generated = db.Column(db.Boolean, default=False)
+
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    updated_at = db.Column(db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now())

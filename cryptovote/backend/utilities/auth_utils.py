@@ -1,24 +1,15 @@
+# utilities/auth_utils.py
 from functools import wraps
-from flask import session, redirect, url_for, jsonify
-from models.voter import Voter
-from models.db import db
+from flask import session, jsonify
 
-def role_required(required_role):
+def role_required(required_role: str):
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
-            user_email = session.get("email")
-            if not user_email:
-                return jsonify({"error": "Authentication required"}), 401
-
-            voter = db.session.query(Voter).filter_by(email_hash=user_email).first()
-            if not voter or voter.vote_role != required_role:
-                return jsonify({"error": f"{required_role.capitalize()} role required"}), 403
-            
-            if "role" not in session or session["role"] != required_role:
-                return jsonify({"error": "Unauthorized access. Admins only."}), 403
-
+            role = session.get("role")
+            twofa = session.get("twofa")
+            if role != required_role or not twofa:
+                return jsonify({"error": "Admin access required"}), 403
             return f(*args, **kwargs)
         return wrapped
     return decorator
-

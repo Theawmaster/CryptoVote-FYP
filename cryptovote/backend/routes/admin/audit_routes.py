@@ -1,10 +1,11 @@
+# routes/audit_routes.py
 from flask import Blueprint, session, request
 from services.audit_service import perform_audit_report, perform_tally
 from utilities.auth_utils import role_required
 
 audit_bp = Blueprint('audit_bp', __name__)
 
-@audit_bp.route("/audit-report/<election_id>")
+@audit_bp.route("/audit-report/<election_id>", methods=["GET"])
 @role_required("admin")
 def audit_report(election_id):
     return perform_audit_report(election_id, session["email"], request.remote_addr)

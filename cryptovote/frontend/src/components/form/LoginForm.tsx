@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import '../styles/auth.css';
-import '../styles/voter-auth.css';
+import '../../styles/auth.css';
+import '../../styles/voter-auth.css';
 
-import { openPassphraseModal } from '../components/auth/PassphraseModal';
-import Toast from '../components/ui/Toast';
-import { getFromIndexedDB } from '../utils/indexeddb-utils';
-import { decryptPrivateKey, importPrivateKeyFromPEM, signNonce } from '../utils/crypto-utils';
+import { openPassphraseModal } from '../auth/PassphraseModal';
+import Toast from '../ui/Toast';
+import { getFromIndexedDB } from '../../utils/indexeddb-utils';
+import { decryptPrivateKey, importPrivateKeyFromPEM, signNonce } from '../../utils/crypto-utils';
 
-const LOGIN_URL = 'http://localhost:5010/login';
-const OTP_URL = 'http://localhost:5010/2fa-verify';
+const LOGIN_URL = '/login';
+const OTP_URL = '/2fa-verify';
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -53,6 +53,7 @@ const LoginForm: React.FC = () => {
       const nonceRes = await fetch(LOGIN_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email }),
       });
       const nonceData = await nonceRes.json();
@@ -105,6 +106,7 @@ const LoginForm: React.FC = () => {
       const loginRes = await fetch(LOGIN_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, signed_nonce: signedNonce }),
       });
       const loginData = await loginRes.json();
@@ -136,6 +138,7 @@ const LoginForm: React.FC = () => {
       const otpRes = await fetch(OTP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, otp }),
       });
       const otpData = await otpRes.json();
