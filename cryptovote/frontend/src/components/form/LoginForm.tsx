@@ -1,158 +1,88 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import '../../styles/auth.css';
 import '../../styles/voter-auth.css';
 
-import { openPassphraseModal } from '../auth/PassphraseModal';
 import Toast from '../ui/Toast';
-import { getFromIndexedDB } from '../../utils/indexeddb-utils';
-import { decryptPrivateKey, importPrivateKeyFromPEM, signNonce } from '../../utils/crypto-utils';
+import { handleLogin } from '../../services/voter/handleLogin';
+import { handleOtpVerify } from '../../services/voter/handleOtpVerify';
 
-const LOGIN_URL = '/login';
-const OTP_URL = '/2fa-verify';
+type ToastKind = 'success' | 'error' | 'info';
 
 const LoginForm: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => localStorage.getItem('voterEmail') || '');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [otpStage, setOtpStage] = useState(false);
 
-  const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; msg: string } | null>(null);
-
-  const showToast = (type: 'success' | 'error' | 'info', msg: string) => {
+  const [toast, setToast] = useState<{ type: ToastKind; msg: string } | null>(null);
+  const showToast = (type: ToastKind, msg: string, ms = 3000) => {
     setToast({ type, msg });
-    setTimeout(() => setToast(null), 3000);
+    window.clearTimeout((showToast as any)._t);
+    (showToast as any)._t = window.setTimeout(() => setToast(null), ms);
   };
 
-  const pickPrivateKeyFile = () => {
-    return new Promise<string>((resolve, reject) => {
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = '.pem';
-      fileInput.onchange = async (e: any) => {
-        const file = e.target.files[0];
-        if (!file) {
-          reject('No file selected');
-          return;
-        }
-        const pem = await file.text();
-        resolve(pem);
-      };
-      fileInput.click();
-    });
-  };
-  
-  const handleLogin = async () => {
+  const emailRef = useRef<HTMLInputElement | null>(null);
+  const otpRef = useRef<HTMLInputElement | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    emailRef.current?.focus();
+    return () => {
+      window.clearTimeout((showToast as any)._t);
+      abortRef.current?.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('voterEmail', email);
+  }, [email]);
+
+  const onLogin = async () => {
     if (!email.trim()) {
       showToast('error', 'Please enter your NTU email.');
+      emailRef.current?.focus();
       return;
     }
-  
     setLoading(true);
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
-      // Step 1: Request nonce
-      const nonceRes = await fetch(LOGIN_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email }),
-      });
-      const nonceData = await nonceRes.json();
-  
-      if (!nonceRes.ok || !nonceData?.nonce) {
-        showToast('error', nonceData?.error || 'Unable to request nonce.');
-        return;
-      }
-  
-      let privateKey: CryptoKey | null = null;
-  
-      // Step 2: Retrieve private key
-      const encryptedKey = await getFromIndexedDB('cryptoVoteKeys', 'encryptedPrivateKey');
-      if (encryptedKey) {
-        showToast('info', 'Found encrypted key in secure storage. Please enter passphrase.');
-        const passphrase = await openPassphraseModal({
-          onCancel: async () => {
-            showToast('error', 'Passphrase entry cancelled.');
-          },
-          mode: 'get',
-        });
-        if (!passphrase) return;
-        try {
-          const decryptedPem = await decryptPrivateKey(encryptedKey, passphrase);
-          privateKey = await importPrivateKeyFromPEM(decryptedPem);
-        } catch {
-          showToast('error', 'Incorrect passphrase or corrupt key.');
-          return;
-        }
-      } else {
-        showToast('info', 'No saved key found. Please upload your private key file.');
-        try {
-          const pem = await pickPrivateKeyFile(); // waits until file is chosen
-          privateKey = await importPrivateKeyFromPEM(pem);
-        } catch (err) {
-          showToast('error', String(err));
-          return;
-        }
-      }
-  
-      // Step 3: Sign nonce
-      if (!privateKey) {
-        showToast('error', 'Private key not available.');
-        return;
-      }
-      const signedNonce = await signNonce(privateKey, nonceData.nonce);
-      console.log("Signed nonce:", signedNonce); // Debugging line
-  
-      // Step 4: Send signed nonce
-      const loginRes = await fetch(LOGIN_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, signed_nonce: signedNonce }),
-      });
-      const loginData = await loginRes.json();
-  
-      if (!loginRes.ok) {
-        showToast('error', loginData?.error || 'Login failed.');
-        return;
-      }
-  
-      showToast('success', 'Signature verified. Please enter OTP.');
-      setOtpStage(true); // Switch to OTP stage
-  
-    } catch (err) {
-      showToast('error', 'Unexpected error during login.');
-      console.error(err);
+      await handleLogin(email, showToast, setOtpStage, controller.signal);
+      setTimeout(() => otpRef.current?.focus(), 0);
+    } catch (e: any) {
+      showToast('error', e?.message || 'Unexpected error during login.');
+      console.error('[voter] login error:', e?._data || e?._raw || e);
     } finally {
       setLoading(false);
     }
-  };  
+  };
 
-  const handleOtpVerify = async () => {
+  const onVerifyOtp = async () => {
     if (!otp.trim()) {
       showToast('error', 'Please enter OTP.');
+      otpRef.current?.focus();
       return;
     }
-
     setLoading(true);
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
-      const otpRes = await fetch(OTP_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, otp }),
-      });
-      const otpData = await otpRes.json();
-
-      if (!otpRes.ok) {
-        showToast('error', otpData?.error || 'OTP verification failed.');
-        return;
-      }
-
-      showToast('success', '2FA successful. Access granted.');
-      // TODO: Redirect to dashboard
-
-    } catch {
-      showToast('error', 'Unexpected error during OTP verification.');
+      await handleOtpVerify(
+        email,
+        otp,
+        showToast,
+        () => {
+          // 👇 TODO: replace with your voter landing route
+          // e.g., navigate('/voter/home')
+          console.log('OTP ok → route user');
+        },
+        controller.signal
+      );
+    } catch (e: any) {
+      showToast('error', e?.message || 'OTP verification failed.');
+      console.error('[voter] otp error:', e?._data || e?._raw || e);
     } finally {
       setLoading(false);
     }
@@ -161,30 +91,42 @@ const LoginForm: React.FC = () => {
   return (
     <>
       {!otpStage ? (
-        <form className="auth-form" onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
+        <form className="auth-form" onSubmit={(e) => { e.preventDefault(); onLogin(); }} noValidate>
           <div className="auth-form-title">Welcome back</div>
+          <label className="sr-only" htmlFor="voter-email">Email</label>
           <input
+            id="voter-email"
+            ref={emailRef}
             type="email"
+            inputMode="email"
+            autoComplete="email"
             placeholder="Enter NTU email"
             className="auth-input"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={loading}
           />
-          <button type="submit" className="auth-submit" disabled={loading}>
+          <button type="submit" className="auth-submit" disabled={loading} aria-busy={loading}>
             {loading ? 'Logging in…' : 'Login'}
           </button>
         </form>
       ) : (
-        <form className="auth-form" onSubmit={(e) => { e.preventDefault(); handleOtpVerify(); }}>
+        <form className="auth-form" onSubmit={(e) => { e.preventDefault(); onVerifyOtp(); }} noValidate>
           <div className="auth-form-title">Enter OTP</div>
+          <label className="sr-only" htmlFor="voter-otp">OTP</label>
           <input
+            id="voter-otp"
+            ref={otpRef}
             type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             placeholder="Enter OTP from authenticator app"
             className="auth-input"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
+            disabled={loading}
           />
-          <button type="submit" className="auth-submit" disabled={loading}>
+          <button type="submit" className="auth-submit" disabled={loading} aria-busy={loading}>
             {loading ? 'Verifying…' : 'Verify OTP'}
           </button>
         </form>

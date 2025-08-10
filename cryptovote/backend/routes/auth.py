@@ -69,7 +69,7 @@ def login():
     voter = Voter.query.filter_by(email_hash=email_hash).first()
 
     try:
-        voter.logged_in = True
+        voter.logged_in = False
         voter.logged_in_2fa = False  # will be set True on /2fa-verify
         voter.last_login_ip = request.remote_addr
         voter.last_login_at = datetime.now(SGT)
@@ -78,11 +78,13 @@ def login():
         session['email'] = email_hash
         session['role'] = voter.vote_role or 'voter'
         session['twofa'] = False
+        session['twofa_started_at'] = datetime.now(SGT).isoformat()
         session.modified = True
 
         return jsonify({
             'message': 'Signature verified. Please complete 2FA.',
             'email': email_hash,
+            'pending_2fa': True,
             'role': session['role'],
         }), 200
 
@@ -110,7 +112,7 @@ def admin_login():
         return jsonify({'error': 'Access denied. Not an admin.'}), 403
 
     try:
-        voter.logged_in = True
+        voter.logged_in = False
         voter.logged_in_2fa = False
         voter.last_login_ip = request.remote_addr
         voter.last_login_at = datetime.now(SGT)
@@ -119,11 +121,13 @@ def admin_login():
         session['email'] = email_hash
         session['role'] = 'admin'
         session['twofa'] = False
+        session['twofa_started_at'] = datetime.now(SGT).isoformat()
         session.modified = True
 
         return jsonify({
             'message': 'Admin signature verified. Please complete 2FA.',
             'email': email_hash,
+            'pending_2fa': True,
             'role': 'admin'
         }), 200
 

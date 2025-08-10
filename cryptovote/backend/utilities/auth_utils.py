@@ -2,14 +2,15 @@
 from functools import wraps
 from flask import session, jsonify
 
-def role_required(required_role: str):
-    def decorator(f):
-        @wraps(f)
+def role_required(role):
+    def deco(fn):
+        @wraps(fn)
         def wrapped(*args, **kwargs):
-            role = session.get("role")
-            twofa = session.get("twofa")
-            if role != required_role or not twofa:
-                return jsonify({"error": "Admin access required"}), 403
-            return f(*args, **kwargs)
+            if session.get('role') != role:
+                return jsonify({'error': 'forbidden'}), 403
+            if session.get('twofa') is not True:
+                return jsonify({'error': '2fa_required'}), 403
+            return fn(*args, **kwargs)
         return wrapped
-    return decorator
+    return deco
+

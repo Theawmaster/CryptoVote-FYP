@@ -26,9 +26,11 @@ app = Flask(__name__, template_folder=TEMPLATES_DIR)
 app.config.from_pyfile("config.py")
 app.secret_key = os.getenv("SECRET_KEY")
 
+is_dev = app.debug or os.getenv("FLASK_ENV") == "development"
+
 app.config.update(
-    SESSION_COOKIE_SAMESITE="None",   # allow cross-site
-    SESSION_COOKIE_SECURE=False,       # change to True in production
+    SESSION_COOKIE_SAMESITE = 'Lax' if is_dev else 'None',
+    SESSION_COOKIE_SECURE = not is_dev,             # False in dev (HTTP), True in prod (HTTPS)
 )
 
 CORS(
