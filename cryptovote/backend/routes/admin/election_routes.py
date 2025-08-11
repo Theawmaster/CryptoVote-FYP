@@ -44,6 +44,7 @@ def create_election():
 def list_elections():
     # If you’ve got a service, call it here instead of hitting the model directly
     rows = Election.query.order_by(Election.created_at.desc()).all()
+    
     def to_dict(e):
         return {
             "id": e.id,

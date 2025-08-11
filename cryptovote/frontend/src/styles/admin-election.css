@@ -1,0 +1,161 @@
+/* Sticky header: back on left, chip on right */
+.mgr-header{
+    position: sticky;
+    top: 0;
+    padding: 8px 0 14px;
+    display: grid;
+    grid-template-columns: 140px 1fr 140px; /* left / center / right */
+    align-items: center;
+    gap: 8px;
+  }
+  .mgr-header__title{
+    margin: 0;
+    text-align: center;
+    font-size: clamp(1.1rem, 0.9rem + .6vw, 1.6rem);
+    font-weight: 800;
+  }
+  .mgr-btn-ghost{
+    background: transparent;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    }
+    .mgr-btn-ghost:hover {
+        background-color: #06ceb6;
+        color: white
+  }
+  .mgr-chip{ justify-self: end; }
+  .dark .mgr-btn-ghost{ border-color:#334155; color:#e5e7eb; }
+  
+  /* State chip */
+  .mgr-chip{ padding:4px 10px; border-radius:9999px; font-size:.8rem; }
+  .mgr-chip--active{ background:#dcfce7; color:#065f46; }
+  .mgr-chip--running{ background:#e0f2fe; color:#077b85; }
+  .mgr-chip--ended{ background:#fee2e2; color:#991b1b; }
+  .mgr-chip--dim{ background:#eef2f7; color:#475569; }
+  .dark .mgr-chip--active{ background:#064e3b; color:#a7f3d0; }
+  .dark .mgr-chip--running{ background:#0c4a6e; color:#bae6fd; }
+  .dark .mgr-chip--ended{ background:#7f1d1d; color:#fecaca; }
+  .dark .mgr-chip--dim{ background:#0b1220; color:#94a3b8; }
+  
+  /* Grid: left actions + right status panel */
+  .mgr-grid{
+    display: grid;
+    gap: 20px;
+    align-items: stretch;
+  }
+  
+  /* When panel is open: give it more room */
+  .mgr-grid.with-panel{
+    grid-template-columns: minmax(320px, 420px) 1fr;
+  }
+  
+  /* When panel is closed: center the actions and widen buttons */
+  .mgr-grid.full-width{
+    grid-template-columns: 1fr;
+  }
+  
+  /* Left side: vertically centered column with even spacing */
+  .mgr-actions{
+    display: grid;
+    grid-auto-rows: min-content;
+    justify-items: center;
+    align-content: center;      /* vertical centering */
+    gap: 16px;
+    min-height: 60vh;           /* keeps stack in the middle of the viewport */
+  }
+  
+  /* Title above the buttons (centered) */
+  .mgr-actions__title{
+    margin: 0 0 6px 0;
+    text-align: center;
+    font-size: clamp(1.25rem, 1rem + .6vw, 1.75rem);
+    font-weight: 800;
+  }
+  
+  /* Buttons */
+  .mgr-btn{
+    height: 46px;
+    border-radius: 12px;
+    padding: 0 16px;
+    border: none;
+    background: #10b981;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .12s ease, opacity .12s ease, transform .06s ease;
+    width: min(100%, 360px);     /* nice width on desktop */
+  }
+  .mgr-btn:hover:not(:disabled){ background:#0ea371; }
+  .mgr-btn:active:not(:disabled){ transform: translateY(1px); }
+  .mgr-btn:disabled{ opacity:.6; cursor: default; }
+  
+  /* Variants */
+  .mgr-btn--outline{
+    background: transparent;
+    color: #0f172a;
+    border: 1px solid #cbd5e1;
+  }
+  .mgr-btn--outline:hover:not(:disabled){ background:#6bd9b4; color:#fff; }
+  .dark .mgr-btn--outline{ color:#e5e7eb; border-color:#334155; }
+  .dark .mgr-btn--outline:hover:not(:disabled){ background:#06ceb6; }
+  
+  .mgr-btn--danger{ background:#ef4444; }
+  .mgr-btn--danger:hover:not(:disabled){ background:#dc2626; }
+  
+  .mgr-btn--muted{ background:#9ca3af; }
+  .mgr-btn--muted:hover:not(:disabled){ background:#6b7280; }
+  
+  /* Status panel */
+  .mgr-panel{
+    background:#fff;
+    border:1px solid #e5e7eb;
+    border-radius:12px;
+    padding:16px;
+    min-height: 260px;
+  }
+  .dark .mgr-panel{ background:#0f172a; border-color:#334155; }
+  
+  .mgr-panel__head{
+    display:flex; justify-content:space-between; align-items:center;
+    font-weight:700; margin-bottom:12px;
+  }
+  .mgr-panel__close{
+    border:none; background:transparent; font-size:30px; line-height:1; cursor:pointer;
+      opacity: 1; transition: opacity .12s ease;
+    }
+    .mgr-panel__close:hover {
+      background-color: #06ceb6;
+      color: white;
+  }
+  
+  /* Status key/values */
+  .mgr-kv{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .mgr-kv dt{ color:#6b7280; }
+  .mgr-kv dd{ margin:0; }
+  .dark .mgr-kv dt{ color:#94a3b8; }
+  
+  @media (min-width: 720px){
+    .mgr-kv{ grid-template-columns: 220px 1fr; }
+    .mgr-kv > div{ display: contents; }
+  }
+  
+  /* Responsive: stack on narrow screens; keep the centered feel */
+  @media (max-width: 980px){
+    .mgr-grid.with-panel{
+      grid-template-columns: 1fr;     /* stack */
+    }
+    .mgr-panel{
+      order: 2;
+    }
+    .mgr-actions{
+      order: 1;
+      min-height: 40vh;
+    }
+  }
+  

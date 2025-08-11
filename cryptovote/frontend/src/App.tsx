@@ -12,6 +12,7 @@ import VoterAuth from './pages/voter/VoterAuth';
 import AdminLogin from './pages/admin-dev/AdminLogin';
 
 import AdminLanding from './pages/admin-dev/AdminLandingPage';
+import AdminElectionPage from './pages/admin-dev/AdminElectionPage';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -30,6 +31,7 @@ function AnimatedRoutes() {
         <Route path="/auth/admin" element={<AdminLogin />} />
 
         <Route path="/admin/landing" element={<AdminLanding />} />
+        <Route path="/admin/manage/:electionId" element={<AdminElectionPage />} />
       </Routes>
     </AnimatePresence>
   );

@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import LogoutButton from '../../components/LogoutButton';
+import LeftSidebar from '../../components/ui/AdminLeftSideBar';
 import CreateElectionForm from '../../components/form/CreateElectionForm';
 import { useLocation, useNavigate } from 'react-router-dom';
-import Brand from '../../components/Brand';
 import '../../styles/admin-landing.css';
 
 type Election = {
@@ -27,6 +26,7 @@ const AdminLandingPage = () => {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [filter, setFilter] = useState<FilterKey>('all');
+  const [showCreate, setShowCreate] = useState(false);            
 
   const fetchAbortRef = useRef<AbortController | null>(null);
 
@@ -50,7 +50,6 @@ const AdminLandingPage = () => {
           return;
         }
 
-        // guard: avoid parsing HTML
         const ct = res.headers.get('content-type') || '';
         if (!ct.includes('application/json')) {
           const txt = await res.text();
@@ -64,8 +63,7 @@ const AdminLandingPage = () => {
 
         setElections(data.elections || []);
       } catch (e: any) {
-        if (e.name === 'AbortError') return;
-        setErr(e.message || 'Failed to load elections');
+        if (e.name !== 'AbortError') setErr(e.message || 'Failed to load elections');
       } finally {
         setLoading(false);
       }
@@ -74,7 +72,6 @@ const AdminLandingPage = () => {
     return () => controller.abort();
   }, []);
 
-  // Filtered view
   const filtered = useMemo(() => {
     switch (filter) {
       case 'active':   return elections.filter(e => e.is_active);
@@ -86,19 +83,11 @@ const AdminLandingPage = () => {
 
   return (
     <div className="admin-landing">
-      <aside className="left-panel">
-        <div className="brand-wrap">
-          <Brand title="Admin Landing Page" />
-        </div>
-        <div className="left-actions">
-          <LogoutButton />
-        </div>
-      </aside>
+      <LeftSidebar title="Admin Landing Page" />
 
       <main className="right-panel">
         <h2>Your Voting Campaigns</h2>
 
-        {/* Filter pills */}
         <div className="filter-bar">
           {(['all','active','ended','upcoming'] as FilterKey[]).map(key => (
             <button
@@ -155,15 +144,27 @@ const AdminLandingPage = () => {
             {/* Create New below the grid */}
             <div
               className="create-section"
-              onClick={() => document.getElementById('create-election-anchor')
-                ?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => {
+                setShowCreate(true);
+                setTimeout(() =>
+                  document.getElementById('create-election-anchor')
+                    ?.scrollIntoView({ behavior: 'smooth' }), 0);
+              }}
             >
               <div className="create-card">+ Create new</div>
             </div>
+
+            {showCreate && (
+              <CreateElectionForm
+                onCreated={(e) => {
+                  setElections(prev => [e, ...prev]);
+                  setShowCreate(false);
+                }}
+              />
+            )}
           </>
         )}
-
-
+        
       </main>
     </div>
   );
