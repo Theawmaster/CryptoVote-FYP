@@ -1,3 +1,4 @@
+// src/pages/admin/AdminElectionPage.tsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -9,6 +10,8 @@ import {
   getElectionStatus,
   startElection,
   endElection,
+  tallyElection,        // NEW
+  downloadReportFile,   // NEW
 } from '../../services/admin/electionActions';
 
 import '../../styles/admin-landing.css';
@@ -27,7 +30,7 @@ type Status = {
   vote_count?: number;
 };
 
-type ModalKind = null | 'start' | 'end';
+type ModalKind = null | 'start' | 'end' | 'tally' | 'report';
 
 const AdminElectionPage: React.FC = () => {
   const { electionId = '' } = useParams();
@@ -37,8 +40,9 @@ const AdminElectionPage: React.FC = () => {
   const [status, setStatus] = useState<Status | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; msg: string } | null>(null);
   const [showStatusPanel, setShowStatusPanel] = useState(true);
-  const [busy, setBusy] = useState<null | 'start' | 'end'>(null);
+  const [busy, setBusy] = useState<null | 'start' | 'end' | 'tally' | 'report'>(null);
   const [confirmModal, setConfirmModal] = useState<ModalKind>(null);
+  const [reportFormat, setReportFormat] = useState<'pdf'|'csv'>('pdf');
 
   const showToast = (type: 'success' | 'error' | 'info', msg: string, ms = 3000) => {
     setToast({ type, msg });
@@ -64,14 +68,14 @@ const AdminElectionPage: React.FC = () => {
     return () => c.abort();
   }, [electionId]);
 
-  // Actual API calls (no prompts here)
+  // --- Action calls (no prompts here) ---
   const doStart = async () => {
     setBusy('start');
     try {
       await startElection(electionId);
       showToast('success', 'Election started.');
       await refresh();
-    } catch (e: any) {
+    } catch (e:any) {
       showToast('error', e?.message || 'Failed to start election.');
     } finally {
       setBusy(null);
@@ -84,33 +88,65 @@ const AdminElectionPage: React.FC = () => {
       await endElection(electionId);
       showToast('success', 'Election ended.');
       await refresh();
-    } catch (e: any) {
+    } catch (e:any) {
       showToast('error', e?.message || 'Failed to end election.');
     } finally {
       setBusy(null);
     }
   };
 
-  // Modal content helpers
+  const doTally = async () => {
+    setBusy('tally');
+    try {
+      const res = await tallyElection(electionId);
+      // res.tally, res.zkp_proofs are available if you want to show a modal of results
+      showToast('success', 'Tally generated.');
+      await refresh();
+    } catch (e:any) {
+      showToast('error', e?.message || 'Failed to tally election.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const doDownloadReport = async () => {
+    setBusy('report');
+    try {
+      await downloadReportFile(electionId, reportFormat); // triggers browser download
+      showToast('success', `Report (${reportFormat.toUpperCase()}) downloaded.`);
+    } catch (e:any) {
+      showToast('error', e?.message || 'Failed to download report.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  // --- Modal text / confirm handler ---
   const modalTitle =
-    confirmModal === 'start'
-      ? 'Start Election'
-      : confirmModal === 'end'
-      ? 'End Election'
-      : '';
+    confirmModal === 'start' ? 'Start Election' :
+    confirmModal === 'end'   ? 'End Election'   :
+    confirmModal === 'tally' ? 'Tally Election' :
+    confirmModal === 'report'? 'Generate Report' :
+    '';
 
   const modalMessage =
     confirmModal === 'start'
       ? `Start "${status?.name ?? 'this election'}" now? This will mark it as Active.`
-      : confirmModal === 'end'
+    : confirmModal === 'end'
       ? `End "${status?.name ?? 'this election'}" now? This action cannot be undone.`
-      : '';
+    : confirmModal === 'tally'
+      ? `Generate the homomorphic tally for "${status?.name ?? 'this election'}"? This requires the election to have ended.`
+    : confirmModal === 'report'
+      ? `Generate a ${reportFormat.toUpperCase()} report for "${status?.name ?? 'this election'}"?`
+    : '';
 
   const onConfirmModal = async () => {
     const kind = confirmModal;
     setConfirmModal(null);
     if (kind === 'start') await doStart();
-    if (kind === 'end') await doEnd();
+    if (kind === 'end')   await doEnd();
+    if (kind === 'tally') await doTally();
+    if (kind === 'report') await doDownloadReport();
   };
 
   const prettyState =
@@ -180,12 +216,35 @@ const AdminElectionPage: React.FC = () => {
                 {busy === 'end' ? 'Ending…' : 'End Election'}
               </button>
 
-              <button className="mgr-btn mgr-btn--muted" disabled>
-                Tally Election (soon)
+              <button
+                className="mgr-btn"
+                disabled={!status.has_ended || busy === 'tally' || !!status.tally_generated}
+                onClick={() => setConfirmModal('tally')}
+                title={!status.has_ended ? 'End election first' : status.tally_generated ? 'Tally already generated' : ''}
+              >
+                {busy === 'tally' ? 'Tallying…' : (status.tally_generated ? 'Tally Generated' : 'Tally Election')}
               </button>
-              <button className="mgr-btn mgr-btn--muted" disabled>
-                Generate Report (soon)
-              </button>
+
+              <div className="mgr-report-row">
+                <button
+                  className="mgr-btn"
+                  disabled={!status.tally_generated || busy === 'report'}
+                  onClick={() => setConfirmModal('report')}
+                  title={!status.tally_generated ? 'Generate tally first' : ''}
+                >
+                  {busy === 'report' ? 'Preparing…' : 'Generate Report'}
+                </button>
+
+                <select
+                  className="mgr-select"
+                  value={reportFormat}
+                  onChange={(e) => setReportFormat(e.target.value as 'pdf'|'csv')}
+                  aria-label="Report format"
+                >
+                  <option value="pdf">PDF</option>
+                  <option value="csv">CSV</option>
+                </select>
+              </div>
             </div>
 
             {/* Status panel */}
@@ -228,7 +287,7 @@ const AdminElectionPage: React.FC = () => {
           />
         )}
 
-        {/* One reusable modal for both Start/End */}
+        {/* Reusable confirm modal */}
         <ConfirmationModal
           isOpen={!!confirmModal}
           title={modalTitle}

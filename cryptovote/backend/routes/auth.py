@@ -127,6 +127,8 @@ def admin_login():
         return jsonify({
             'message': 'Admin signature verified. Please complete 2FA.',
             'email': email_hash,
+            'last_login_ip': voter.last_login_ip,
+            'last_login_at': voter.last_login_at,
             'pending_2fa': True,
             'role': 'admin'
         }), 200

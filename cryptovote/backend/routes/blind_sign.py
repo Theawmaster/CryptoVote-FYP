@@ -5,6 +5,9 @@ from models.voter import Voter
 from utilities.blind_signature_utils import sign_blinded_token
 import hashlib
 from datetime import datetime
+from _zoneinfo import ZoneInfo
+
+SGT = ZoneInfo("Asia/Singapore")
 
 blind_sign_bp = Blueprint('blind_sign', __name__)
 
@@ -23,7 +26,7 @@ def blind_sign():
     if not voter or not voter.is_verified or not voter.logged_in:
         return jsonify({"error": "Unauthorized"}), 403
 
-    # ✅ Prevent duplicate token issuance
+    #  Prevent duplicate token issuance
     if voter.has_token:
         return jsonify({"error": "Token already issued for this voter"}), 403
 
@@ -34,7 +37,7 @@ def blind_sign():
         signed_blinded_hex = hex(signed_blinded_int)[2:]
 
         # Generate deterministic but irreversible issuance token hash
-        issued_time = datetime.utcnow()
+        issued_time = datetime.now(SGT)
         fingerprint = email + issued_time.isoformat()
         token_hash = hashlib.sha256(fingerprint.encode()).hexdigest()
 

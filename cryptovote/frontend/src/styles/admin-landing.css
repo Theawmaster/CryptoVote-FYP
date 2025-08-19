@@ -418,4 +418,110 @@
   .status-list span { color: #6b7280; margin-right: 6px; }
   .dark .status-list span { color: #94a3b8; }
   
-  
+  /* For the Alert of suspicious activity */
+/* ---------- THEME TOKENS ---------- */
+:root{
+  --mgr-surface: #ffffff;
+  --mgr-surface-2: #f4f4f5;
+  --mgr-text: #111827;
+  --mgr-subtext: #6b7280;
+  --mgr-border: #ececec;
+  --mgr-shadow: rgba(0,0,0,.18);
+  --mgr-hover: #06ceb6;       /* light hover */
+}
+
+.dark{
+  --mgr-surface: #0f172a;     /* drawer bg */
+  --mgr-surface-2: #1f2937;   /* icon btn bg */
+  --mgr-text: #e5e7eb;
+  --mgr-subtext: #9ca3af;
+  --mgr-border: #334155;
+  --mgr-shadow: rgba(0,0,0,.6);
+  --mgr-hover: #0ea371;       /* dark hover */
+}
+
+/* ---------- HEADER + BELL ---------- */
+.mgr-header-row{
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;
+}
+
+.mgr-icon-btn{
+  position:relative; display:inline-flex; align-items:center; justify-content:center;
+  width:40px; height:40px; border-radius:9999px;
+  background: var(--mgr-surface-2);
+  transition: background .18s ease, color .18s ease, transform .06s ease;
+  color: var(--mgr-text);
+  /* 1) make it sit a touch lower & breathe */
+  margin-top: 16px;               /* ↓ lower the button a bit */
+  margin-left: 8px;
+  border: 1px solid transparent;
+}
+.mgr-icon-btn:hover{
+  background: var(--mgr-hover);
+  color: #fbfbfb;                /* readable on both greens */
+}
+.dark .mgr-icon-btn{ border-color: var(--mgr-border); }
+
+/* subtle press feedback */
+.mgr-icon-btn:active{ transform: translateY(1px); }
+
+.mgr-badge-dot{
+  position:absolute; top:-4px; right:-4px;
+  min-width:20px; height:20px; border-radius:9999px;
+  background:#e11d48; color:#fff; font-size:12px; display:flex; align-items:center; justify-content:center;
+  padding:0 6px; box-shadow:0 1px 2px rgba(0,0,0,.12);
+}
+
+/* ---------- DRAWER ---------- */
+.mgr-drawer-backdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:50;
+  display:flex; justify-content:flex-end;
+}
+.mgr-drawer{
+  width:480px; max-width:90vw; height:100%;
+  background: var(--mgr-surface); color: var(--mgr-text);
+  padding:16px; overflow:auto;
+  box-shadow:-8px 0 24px var(--mgr-shadow);
+  border-top-left-radius:16px; border-bottom-left-radius:16px;
+  border-left: 1px solid var(--mgr-border);
+}
+.mgr-drawer-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.mgr-link{ color:#0f766e; font-size:14px; background:none; border:none; cursor:pointer; }
+.mgr-link:hover{ text-decoration:underline; background-color:#06ceb6; color:#ffffff}
+.dark .mgr-link:hover{
+  background-color:#0ea371;
+  color: #d9f3f0;
+}
+
+/* ---------- LIST ---------- */
+.mgr-list{ display:flex; flex-direction:column; gap:10px; }
+.mgr-card{
+  border:1px solid var(--mgr-border);
+  border-radius:16px; padding:12px;
+  background: var(--mgr-surface);
+}
+.mgr-card-top{ display:flex; align-items:center; justify-content:space-between; }
+.mgr-chip{
+  font-size:12px; padding:2px 8px; border-radius:9999px;
+  background:#fee2e2; color:#991b1b;
+}
+.dark .mgr-chip{ background:#3f1f1f; color:#fca5a5; }
+
+.mgr-card-title{ font-weight:600; margin-top:6px; }
+.mgr-card-meta{ font-size:12px; color: var(--mgr-subtext); margin-top:2px; }
+.mgr-card-route{
+  font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size:12px; color: var(--mgr-text); opacity:.9; margin-top:6px;
+}
+
+/* keep skeletons & grid using existing styles, they inherit theme vars */
+
+.mgr-lastlogin-chip{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.35rem .75rem;border-radius:9999px;
+  border:1px solid rgba(100,116,139,.45);
+  background:rgba(255,255,255,.6);backdrop-filter:blur(6px);
+}
+.dark .mgr-lastlogin-chip{background:rgba(15,23,42,.6);color:#e2e8f0;}
+.mgr-chip-label{font-weight:600;}
+.mgr-chip-muted{color:#64748b;}
