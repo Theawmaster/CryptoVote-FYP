@@ -128,7 +128,7 @@ def admin_login():
             'message': 'Admin signature verified. Please complete 2FA.',
             'email': email_hash,
             'last_login_ip': voter.last_login_ip,
-            'last_login_at': voter.last_login_at,
+            'last_login_at': voter.last_login_at.astimezone(SGT).isoformat() if voter.last_login_at else None,
             'pending_2fa': True,
             'role': 'admin'
         }), 200
