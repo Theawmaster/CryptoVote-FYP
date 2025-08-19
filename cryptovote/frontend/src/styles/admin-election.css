@@ -158,4 +158,48 @@
       min-height: 40vh;
     }
   }
+
+  .mgr-report-row{
+  display:flex;
+  align-items:center;
+  gap:12px;           /* space between select & button */
+}
+
+.mgr-report-row .mgr-select{
+  width:auto;            /* keep natural width */
+  min-width:140px;
+  background-color: #b2f0eb;
+  cursor: pointer;
+  border-radius: 5px;
+}
+.mgr-report-row .mgr-select:hover{
+  background-color: #50e9d7;
+  color: #fff;
+}
+.dark .mgr-report-row .mgr-select{
+  background-color: #334155;
+  color: #e5e7eb;
+  cursor: pointer;
+  border-radius: 5px;
+}
+.dark .mgr-report-row .mgr-select:hover{
+  background-color: #06ceb6;
+  color: #fff;
+}
+.mgr-report-row .mgr-btn{
+  white-space:nowrap;    /* keep label on one line */
+}
+
+/* Mobile: stack neatly */
+@media (max-width: 600px){
+  .mgr-report-row{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .mgr-report-row .mgr-select,
+  .mgr-report-row .mgr-btn{
+    width:100%;
+  }
+}
+
   

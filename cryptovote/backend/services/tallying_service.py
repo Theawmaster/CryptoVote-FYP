@@ -1,99 +1,122 @@
+# services/tallying_service.py
 from collections import defaultdict
-from models.encrypted_candidate_vote import EncryptedCandidateVote
-from utilities.paillier_utils import load_private_key, load_public_key
-from phe import paillier
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 import logging
+from phe import paillier
 
-def fetch_encrypted_votes(session: Session):
-    """Retrieve all encrypted candidate votes from the database."""
-    return session.query(EncryptedCandidateVote).all()
+from models.encrypted_candidate_vote import EncryptedCandidateVote
+from models.election import Candidate
+from utilities.paillier_utils import load_private_key, load_public_key
 
-def reconstruct_encrypted_number(public_key, vote):
+
+def fetch_encrypted_votes(session: Session, election_id: str):
     """
-    Reconstruct an encrypted number from the vote data.
-    Returns a Paillier EncryptedNumber object or None if reconstruction fails.
+    Retrieve encrypted votes ONLY for this election by joining through Candidate.
+    """
+    return (
+        session.query(EncryptedCandidateVote)
+        .join(Candidate, Candidate.id == EncryptedCandidateVote.candidate_id)
+        .filter(Candidate.election_id == election_id)
+        .all()
+    )
+
+
+def reconstruct_encrypted_number(public_key, vote: EncryptedCandidateVote):
+    """
+    Reconstruct a Paillier EncryptedNumber from stored ciphertext/exponent.
     """
     try:
         ciphertext = int(vote.vote_ciphertext)
         exponent = int(vote.vote_exponent)
-        encrypted = paillier.EncryptedNumber(public_key, ciphertext, exponent)
+        enc = paillier.EncryptedNumber(public_key, ciphertext, exponent)
 
         if ciphertext >= public_key.nsquare:
-            logging.warning(f"[!] Ciphertext exceeds n² for vote {vote.id}. Potential overflow risk.")
-
-        return encrypted
+            logging.warning(
+                f"[!] Ciphertext exceeds n² for vote {vote.id}. Potential overflow risk."
+            )
+        return enc
     except Exception as e:
-        logging.error(f"❌ Failed to reconstruct encrypted number for vote {vote.id}: {e}")
+        logging.error(f"❌ Reconstruct failed for vote {vote.id}: {e}")
         return None
+
 
 def aggregate_votes(votes, public_key):
     """
-    Aggregate encrypted votes using homomorphic addition.
-    Returns a dictionary: {candidate_id: encrypted_sum}
+    Homomorphically add encrypted ballots per candidate.
+    Returns: dict[candidate_id] -> EncryptedNumber
     """
-    tally_map = defaultdict(lambda: public_key.encrypt(0))
+    zero = public_key.encrypt(0)
+    tally_map = defaultdict(lambda: zero)
 
-    for vote in votes:
-        candidate_id = vote.candidate_id
-        encrypted_num = reconstruct_encrypted_number(public_key, vote)
-        if encrypted_num:
-            tally_map[candidate_id] += encrypted_num
+    for v in votes:
+        enc = reconstruct_encrypted_number(public_key, v)
+        if enc is not None:
+            tally_map[v.candidate_id] += enc
 
     return tally_map
 
+
 def decrypt_tally(tally_map, private_key):
     """
-    Decrypt each candidate's tally.
-    Returns: {candidate_id: decrypted_vote_count}
-    Handles decryption overflow gracefully.
+    Decrypt the per-candidate encrypted sums.
+    Returns: dict[candidate_id] -> int (or -1 on failure)
     """
-    results = {}
-    for candidate_id, ciphertext in tally_map.items():
+    out = {}
+    for cid, enc_sum in tally_map.items():
         try:
-            count = private_key.decrypt(ciphertext)
-            results[candidate_id] = count
+            out[cid] = private_key.decrypt(enc_sum)
         except Exception as e:
-            logging.error(f"❌ Decryption failed for candidate '{candidate_id}': {e}")
-            results[candidate_id] = -1  # or None if preferred
-    return results
+            logging.error(f"❌ Decryption failed for candidate '{cid}': {e}")
+            out[cid] = -1
+    return out
 
-def format_tally_result(result_dict, max_reasonable_votes=10000):
-    formatted = []
-    for cid, count in result_dict.items():
+
+def format_tally_result(session: Session, election_id: str, dec_counts: dict, max_reasonable=10000):
+    """
+    Produce a list including zero-vote candidates:
+    [{candidate_id, candidate_name, vote_count}, ...]
+    """
+    candidates = (
+        session.query(Candidate.id, Candidate.name)
+        .filter(Candidate.election_id == election_id)
+        .order_by(Candidate.name.asc())
+        .all()
+    )
+
+    rows = []
+    for cid, cname in candidates:
+        count = dec_counts.get(cid, 0)
         if count < 0:
-            display_count = "⚠️ Decryption Failed"
-        elif count > max_reasonable_votes:
-            display_count = f"⚠️ Overflow ({count})"
+            display = "⚠️ Decryption Failed"
+        elif max_reasonable is not None and count > max_reasonable:
+            display = f"⚠️ Overflow ({count})"
         else:
-            display_count = count
-
-        formatted.append({
+            display = int(count)
+        rows.append({
             "candidate_id": cid,
-            "vote_count": display_count
+            "candidate_name": cname,
+            "vote_count": display,
         })
-    return formatted
+    return rows
 
 
-def tally_votes(session: Session):
+def tally_votes(session: Session, election_id: str):
     """
-    Main function to be called from admin route/controller.
-    Performs secure vote tallying and returns final result.
+    Main entry: tally one election’s votes using Paillier homomorphic addition.
     """
-    logging.info("🔐 Starting homomorphic tallying process...")
+    logging.info(f"🔐 Starting tally for election '{election_id}'")
 
     public_key = load_public_key()
     private_key = load_private_key()
 
-    # Warn if key too small
-    bit_length = public_key.n.bit_length()
-    if bit_length < 2048:
-        logging.warning(f"⚠️ Paillier key bit length is {bit_length}, which may be too small for safe summation.")
+    if public_key.n.bit_length() < 2048:
+        logging.warning("⚠️ Paillier key < 2048 bits; consider rotating to a stronger key.")
 
-    votes = fetch_encrypted_votes(session)
-    tally_map = aggregate_votes(votes, public_key)
-    result = decrypt_tally(tally_map, private_key)
-    formatted_result = format_tally_result(result)
+    votes = fetch_encrypted_votes(session, election_id)
+    enc_sums = aggregate_votes(votes, public_key)
+    dec_counts = decrypt_tally(enc_sums, private_key)
+    result = format_tally_result(session, election_id, dec_counts)
 
-    logging.info("✅ Tallying complete.")
-    return formatted_result
+    logging.info("✅ Tally complete.")
+    return result
