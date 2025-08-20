@@ -1,6 +1,6 @@
 import React from 'react';
-import Brand from '../Brand';
-import LogoutButton from '../LogoutButton';
+import Brand from '../ui/Brand';
+import LogoutButton from '../auth/LogoutButton';
 import '../../styles/admin-landing.css';
 
 type Props = {

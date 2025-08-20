@@ -1,6 +1,6 @@
 import React from 'react';
-import ntuLogo from '../assets/logo/ntu_logo.png';
-import cryptovoteLogo from '../assets/logo/cryptovote_logo.png';
+import ntuLogo from '../../assets/logo/ntu_logo.png';
+import cryptovoteLogo from '../../assets/logo/cryptovote_logo.png';
 
 type BrandProps = {
   /** Text/JSX to show under the logos (editable). Defaults to "Voter Authentication". */

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import RoleSelect from '../../components/RoleSelect';
-import Brand from '../../components/Brand';
+import RoleSelect from '../../components/auth/RoleSelect';
+import Brand from '../../components/ui/Brand';
 import registerLogo from '../../assets/logo/register.gif';
 import loginLogo from '../../assets/logo/login.gif';
 import RegisterForm from '../../components/form/RegisterForm';
