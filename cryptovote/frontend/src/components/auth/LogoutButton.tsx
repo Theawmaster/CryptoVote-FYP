@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Toast from './ui/Toast';
+import Toast from '../ui/Toast';
 
 const LogoutButton: React.FC<{ onLogoutSuccess?: () => void }> = ({ onLogoutSuccess }) => {
   const navigate = useNavigate();

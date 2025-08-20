@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
-import Brand from '../../components/Brand';
-import RoleSelect from '../../components/RoleSelect';
+import Brand from '../../components/ui/Brand';
+import RoleSelect from '../../components/auth/RoleSelect';
 import Toast from '../../components/ui/Toast';
 
 import { handleLogin } from '../../services/admin/handleLogin';
