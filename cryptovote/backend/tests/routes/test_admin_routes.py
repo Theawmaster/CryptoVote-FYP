@@ -9,7 +9,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-from routes.admin_routes import admin_bp
+from cryptovote.backend.routes.admin.admin_routes import admin_bp
 from models.db import db  # Assuming your SQLAlchemy instance is here
 
 @pytest.fixture
