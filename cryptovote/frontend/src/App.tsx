@@ -16,6 +16,7 @@ import AdminElectionPage from './pages/admin-dev/AdminElectionPage';
 
 import VoterLandingPage from './pages/voter/VoterLandingPage';
 import VoterBallotPage from "./pages/voter/VoterBallotPage";
+import VoteCompletePage from "./pages/voter/VoteCompletePage";
 
 import { CredentialProvider } from './ctx/CredentialContext';
 
@@ -40,6 +41,7 @@ function AnimatedRoutes() {
 
         <Route path="/voter" element={<VoterLandingPage />} />
         <Route path="/voter/elections/:id" element={<VoterBallotPage />} />
+        <Route path="/voter/elections/:id/complete" element={<VoteCompletePage />} />
 
       </Routes>
     </AnimatePresence>
