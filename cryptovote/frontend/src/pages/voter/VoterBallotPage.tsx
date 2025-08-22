@@ -128,6 +128,10 @@ const VoterBallotPage: React.FC = () => {
       setDone(true);
       clear();
       try { sessionStorage.removeItem("ephemeral_cred"); } catch {}
+      nav(`/voter/elections/${electionId}/complete`, {
+        replace: true,
+        state: { electionName: detail?.name ?? "Election" }
+        });
     } catch (e: any) {
       setErr(e.message || "Failed to cast vote");
     } finally {
@@ -142,12 +146,14 @@ const VoterBallotPage: React.FC = () => {
       <main className="vl-main">
         {/* LEFT column */}
         <section className="vl-left">
-          <div className="vl-header-row" style={{ gap: 12, alignItems: "center" }}>
-            <button className="btn btn-outline" onClick={requestBack} aria-label="Back to options">
-              ← Back
-            </button>
-            <h2 style={{ margin: 0 }}>{detail?.name ?? "Election"}</h2>
-          </div>
+        {/* Header: left back button, centered title, right spacer for symmetry */}
+        <div className="ballot-header-bar">
+        <button className="btn btn-outline" onClick={requestBack} aria-label="Back to options">
+            ← Back
+        </button>
+        <h1 className="ballot-title-center">{detail?.name ?? "Election"}</h1>
+        <div /> {/* spacer to balance the grid */}
+        </div>
 
           {!checked && (
             <div className="vl-grid">
@@ -192,34 +198,27 @@ const VoterBallotPage: React.FC = () => {
 
               {err && <div className="vl-error">{err}</div>}
 
-              {!loading && !err && !done && detail && (
-                <div className="ballot-card">
-                  <div className="ballot-header">
-                    <span className="ballot-title">{detail.name}</span>
-                  </div>
-
-                  <div className="ballot-list">
+                {!loading && !err && !done && detail && (
+                <div className="ballot-card ballot-card--wide">
+                    <div className="ballot-list">
                     {detail.candidates.map((c) => (
-                      <div key={c.id} className={`ballot-row ${selected === c.id ? "is-selected" : ""}`}>
+                        <div key={c.id} className={`ballot-row ${selected === c.id ? "is-selected" : ""}`}>
                         <div className="ballot-name">{c.name}</div>
                         <div className="ballot-actions">
-                          <button className="btn btn-outline" onClick={() => alert("Candidate profile coming soon")} disabled={disabled}>
-                            Info
-                          </button>
-                          <button
-                            className="btn btn-primary"
+                            <button
+                            className="btn btn-primary ballot-vote-btn"
                             onClick={() => { setSelected(c.id); setConfirming(true); }}
                             disabled={disabled}
                             aria-label={`Vote for ${c.name}`}
-                          >
+                            >
                             ✓ Vote
-                          </button>
+                            </button>
                         </div>
-                      </div>
+                        </div>
                     ))}
-                  </div>
+                    </div>
                 </div>
-              )}
+                )}
 
               {confirming && selected && !done && (
                 <div className="vl-card" role="dialog" aria-modal="true" style={{ maxWidth: 560 }}>

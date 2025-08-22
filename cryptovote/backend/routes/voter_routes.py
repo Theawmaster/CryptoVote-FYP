@@ -1,7 +1,9 @@
-from flask import Blueprint, jsonify
-from sqlalchemy import func
+# routes/voter.py
+from flask import Blueprint, jsonify, session
+from sqlalchemy import func, and_, exists, not_
 from models.db import db
 from models.election import Election, Candidate
+from models.voter_election_status import VoterElectionStatus as VES
 from utilities.auth_utils import role_required
 
 voter_bp = Blueprint("voter", __name__)
@@ -14,6 +16,16 @@ def list_active_elections():
       is_active = TRUE AND has_started = TRUE AND has_ended = FALSE
     Includes a lightweight candidate_count for quick display.
     """
+    
+    voter_id = session.get("voter_id")
+
+    # Hide if a token has already been issued for this voter & election
+    hide_if_issued = exists().where(and_(
+        VES.voter_id == voter_id,
+        VES.election_id == Election.id,
+        VES.token_issued_at.isnot(None)
+    ))
+    
     rows = (
         db.session.query(
             Election.id,
@@ -30,6 +42,7 @@ def list_active_elections():
             Election.is_active.is_(True),
             Election.has_started.is_(True),
             Election.has_ended.is_(False),
+            not_(hide_if_issued),   # <-- anti-filter
         )
         .group_by(
             Election.id,

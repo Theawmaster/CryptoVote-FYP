@@ -5,6 +5,7 @@ from models.issued_token import IssuedToken
 from models.voter import Voter
 from models.election import Election
 from utilities.blind_signature_utils import sign_blinded_token
+from models.voter_election_status import VoterElectionStatus as VES
 from utilities.auth_utils import role_required
 import hashlib
 from datetime import datetime
@@ -13,6 +14,16 @@ from _zoneinfo import ZoneInfo
 SGT = ZoneInfo("Asia/Singapore")
 
 blind_sign_bp = Blueprint("blind_sign", __name__)
+
+def mark_token_issued(voter_id: int, election_id: str):
+    ves = (VES.query
+              .filter_by(voter_id=voter_id, election_id=election_id)
+              .one_or_none())
+    if not ves:
+        ves = VES(voter_id=voter_id, election_id=election_id)
+        db.session.add(ves)
+    ves.token_issued_at = datetime.now(SGT)
+    db.session.commit()
 
 @blind_sign_bp.post("/elections/<string:election_id>/blind-sign")
 @role_required("voter")  # your decorator already checks twofa
@@ -71,6 +82,9 @@ def blind_sign(election_id):
             issued_at=issued_time
         )
         db.session.add(issued)
+
+        mark_token_issued(voter_id=voter.id, election_id=election_id)
+
         db.session.commit()
 
         return jsonify({
@@ -84,3 +98,4 @@ def blind_sign(election_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"signing_failed: {e}"}), 500
+

@@ -257,6 +257,11 @@
   border: 1px solid rgba(0,0,0,.06);
   max-width: 720px;
 }
+.dark .ballot-card {
+  background: #0f172a;
+  border-color: #334155;
+  box-shadow: none;
+} 
 .ballot-header {
   border-bottom: 1px solid rgba(0,0,0,.08);
   padding-bottom: 8px;
@@ -274,7 +279,14 @@
   border-radius: 10px;
   background: #fafafa;
 }
+.dark .ballot-row {
+  background: #1f2937;
+  border-color: #374151;
+}
 .ballot-row.is-selected { outline: 2px solid #14b8a6; background: #f0fffd; }
+.ballot-row:hover { background: #7ee1cc; }
+.dark .ballot-row:hover { background: #3ab294; }
+.dark .ballot-row.is-selected { outline-color: #0ea5a5; background: #ccfbf1; color: black; }
 .ballot-name { font-weight: 500; }
 .ballot-actions { display: flex; gap: 8px; }
 
@@ -291,10 +303,11 @@
   border: 1px solid transparent; cursor: pointer;
 }
 .btn:disabled { opacity: .65; cursor: not-allowed; }
-.btn-primary { background: #14b8a6; color: #fff; }
-.btn-primary:hover { filter: brightness(.95); }
+.btn-primary { background: #0aaf9b; color: #fff; }
+.btn-primary:hover { filter: brightness(.95); background: #14c5b1;}
 .btn-outline { background: #fff; border-color: rgba(0,0,0,.15); }
-.btn-outline:hover { background: #f7f7f7; }
+.dark .btn-outline { background: #374151; border-color: #4b5563; }
+.btn-outline:hover { background: #1bd2bd; color: #fff;}
 .btn.wide { width: 100%; }
 
 /* right sidebar visuals to match the sketch */
@@ -308,3 +321,21 @@
   border: 2px solid #9fe4dc;
 }
 .sb-title { font-size: 20px; font-weight: 700; }
+
+/* --- Ballot header layout --- */
+.ballot-header-bar {
+  display: grid;
+  grid-template-columns: 120px 1fr 120px; /* left back btn / centered title / right spacer */
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 18px;
+}
+
+.ballot-title-center {
+  margin: 0;
+  text-align: center;
+  line-height: 1.2;
+  font-size: clamp(1.25rem, .8rem + 1vw, 1.75rem);
+}
+
+
