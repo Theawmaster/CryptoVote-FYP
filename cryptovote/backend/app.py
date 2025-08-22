@@ -10,6 +10,7 @@ from routes.cast_vote import cast_vote_bp
 from routes.blind_sign import blind_sign_bp
 from routes.admin.admin_routes import admin_bp
 from routes.voter_routes import voter_bp
+from routes.candidate_list import candidate_list_bp
 from routes.admin.audit_routes import audit_bp
 from routes.admin.download_routes import download_bp
 from routes.admin.election_routes import election_bp
@@ -63,6 +64,7 @@ app.register_blueprint(download_bp, url_prefix="/admin")
 app.register_blueprint(election_bp, url_prefix="/admin")
 app.register_blueprint(bp_me, url_prefix="/admin")
 app.register_blueprint(security_bp, url_prefix="/admin")
+app.register_blueprint(candidate_list_bp, url_prefix="/voter")
 app.register_blueprint(keys_bp)
 
 # IP Restriction Middleware

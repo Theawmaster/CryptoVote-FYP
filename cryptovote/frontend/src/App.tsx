@@ -15,6 +15,9 @@ import AdminLanding from './pages/admin-dev/AdminLandingPage';
 import AdminElectionPage from './pages/admin-dev/AdminElectionPage';
 
 import VoterLandingPage from './pages/voter/VoterLandingPage';
+import VoterBallotPage from "./pages/voter/VoterBallotPage";
+
+import { CredentialProvider } from './ctx/CredentialContext';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -36,6 +39,7 @@ function AnimatedRoutes() {
         <Route path="/admin/manage/:electionId" element={<AdminElectionPage />} />
 
         <Route path="/voter" element={<VoterLandingPage />} />
+        <Route path="/voter/elections/:id" element={<VoterBallotPage />} />
 
       </Routes>
     </AnimatePresence>
@@ -69,28 +73,30 @@ function App() {
 
   
   return (
-    <Router>
-      <div className="relative min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white transition-colors duration-300">
-        {/* Toggle Button */}
-        <button
-          className="absolute top-4 right-4 z-50 w-16 h-8 
-          bg-gray-300 hover:bg-teal-500 
-          dark:bg-gray-400 dark:hover:bg-teal-400 
-          rounded-full flex items-center px-1 shadow-inner transition-all"        
-          onClick={() => setDarkMode(!darkMode)}
-        >
-          <div
-            className={`w-6 h-6 rounded-full flex items-center justify-center text-white transform transition-transform duration-300 ${
-              darkMode ? 'translate-x-8 bg-gray-300 text-gray-800' : 'bg-yellow-400 text-yellow-800'
-            }`}
+    <CredentialProvider>
+      <Router>
+        <div className="relative min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white transition-colors duration-300">
+          {/* Toggle Button */}
+          <button
+            className="absolute top-4 right-4 z-50 w-16 h-8 
+            bg-gray-300 hover:bg-teal-500 
+            dark:bg-gray-400 dark:hover:bg-teal-400 
+            rounded-full flex items-center px-1 shadow-inner transition-all"        
+            onClick={() => setDarkMode(!darkMode)}
           >
-            {darkMode ? <MoonIcon size={20} /> : <SunIcon size={20} />}
-          </div>
-        </button>
+            <div
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-white transform transition-transform duration-300 ${
+                darkMode ? 'translate-x-8 bg-gray-300 text-gray-800' : 'bg-yellow-400 text-yellow-800'
+              }`}
+            >
+              {darkMode ? <MoonIcon size={20} /> : <SunIcon size={20} />}
+            </div>
+          </button>
 
-        <AnimatedRoutes />
-      </div>
-    </Router>
+          <AnimatedRoutes />
+        </div>
+      </Router>
+    </CredentialProvider>
   );
 }
 

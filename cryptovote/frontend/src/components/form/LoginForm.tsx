@@ -28,6 +28,7 @@ const LoginForm: React.FC = () => {
   const otpRef = useRef<HTMLInputElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+
   useEffect(() => {
     emailRef.current?.focus();
     return () => {
@@ -87,7 +88,8 @@ const LoginForm: React.FC = () => {
         otp,
         showToast,
         () => {
-           navigate('/voter', { replace: true });
+          try { sessionStorage.removeItem('voter.email'); } catch {}
+          navigate('/voter', { replace: true });
           console.log('OTP ok → route user');
         },
         controller.signal
@@ -111,7 +113,7 @@ const LoginForm: React.FC = () => {
             ref={emailRef}
             type="email"
             inputMode="email"
-            autoComplete="email"
+            autoComplete="off"
             placeholder="Enter NTU email"
             className="auth-input"
             value={email}
