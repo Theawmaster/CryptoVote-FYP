@@ -1,57 +1,86 @@
-from flask import Blueprint, request, jsonify
+# routes/blind_sign.py
+from flask import Blueprint, request, jsonify, session
 from models.db import db
 from models.issued_token import IssuedToken
 from models.voter import Voter
+from models.election import Election
 from utilities.blind_signature_utils import sign_blinded_token
+from utilities.auth_utils import role_required
 import hashlib
 from datetime import datetime
 from _zoneinfo import ZoneInfo
 
 SGT = ZoneInfo("Asia/Singapore")
 
-blind_sign_bp = Blueprint('blind_sign', __name__)
+blind_sign_bp = Blueprint("blind_sign", __name__)
 
-@blind_sign_bp.route('/blind-sign', methods=['POST'])
-def blind_sign():
-    data = request.get_json()
-    email = data.get("email")
-    blinded_token_hex = data.get("blinded_token")
+@blind_sign_bp.post("/elections/<string:election_id>/blind-sign")
+@role_required("voter")  # your decorator already checks twofa
+def blind_sign(election_id):
+    # ---- session identity (don’t trust email in body) ----
+    email_hash = session.get("email")
+    if not email_hash:
+        return jsonify({"error": "unauthenticated"}), 401
 
-    if not email or not blinded_token_hex:
-        return jsonify({"error": "Email and blinded_token are required"}), 400
-
-    email_hash = hashlib.sha256(email.encode()).hexdigest()
     voter = Voter.query.filter_by(email_hash=email_hash).first()
-
     if not voter or not voter.is_verified or not voter.logged_in:
-        return jsonify({"error": "Unauthorized"}), 403
+        return jsonify({"error": "forbidden"}), 403
 
-    #  Prevent duplicate token issuance
-    if voter.has_token:
-        return jsonify({"error": "Token already issued for this voter"}), 403
+    # ---- input ----
+    data = request.get_json(force=True) or {}
+    blinded_token_hex = data.get("blinded_token_hex") or data.get("blinded_token")  # allow old key for compatibility
+    rsa_key_id = data.get("rsa_key_id")
+
+    if not blinded_token_hex or not rsa_key_id:
+        return jsonify({"error": "blinded_token_hex and rsa_key_id are required"}), 400
+
+    # ---- election & key check ----
+    election = Election.query.filter_by(id=election_id, is_active=True).first()
+    if not election:
+        return jsonify({"error": "invalid_election"}), 400
+
+    if getattr(election, "rsa_key_id", None) != rsa_key_id:
+        return jsonify({"error": "key_mismatch_for_election"}), 400
+
+    # ---- prevent duplicate issuance (keep your current policy) ----
+    if getattr(voter, "has_token", False):
+        return jsonify({"error": "token_already_issued"}), 403
 
     try:
-        # Blind signature generation
         blinded_int = int(blinded_token_hex, 16)
-        signed_blinded_int = sign_blinded_token(blinded_int)
+
+        # Support both signatures: sign_blinded_token(blinded_int, rsa_key_id) or sign_blinded_token(blinded_int)
+        try:
+            signed_blinded_int = sign_blinded_token(blinded_int, rsa_key_id)  # preferred if your util supports per-key
+        except TypeError:
+            signed_blinded_int = sign_blinded_token(blinded_int)  # fallback to global key util
+
         signed_blinded_hex = hex(signed_blinded_int)[2:]
 
-        # Generate deterministic but irreversible issuance token hash
+        # ---- record issuance (keep it minimal / unlinkable) ----
         issued_time = datetime.now(SGT)
-        fingerprint = email + issued_time.isoformat()
-        token_hash = hashlib.sha256(fingerprint.encode()).hexdigest()
 
-        # Update voter's status + log issuance
-        voter.has_token = True
+        # This issuance hash is just an internal marker (not the spend token hash)
+        issuance_fingerprint = f"{email_hash}|{election_id}|{issued_time.isoformat()}"
+        issuance_hash = hashlib.sha256(issuance_fingerprint.encode()).hexdigest()
+
+        voter.has_token = True  # your current policy (one token at a time per voter)
         issued = IssuedToken(
-            token_hash=token_hash,
+            token_hash=issuance_hash,
             used=False,
             issued_at=issued_time
         )
         db.session.add(issued)
         db.session.commit()
 
-        return jsonify({"signed_blinded_token": signed_blinded_hex}), 200
+        return jsonify({
+            "signed_blinded_token_hex": signed_blinded_hex,
+            "rsa_key_id": rsa_key_id
+        }), 200
 
+    except ValueError:
+        db.session.rollback()
+        return jsonify({"error": "invalid_blinded_token_hex"}), 400
     except Exception as e:
-        return jsonify({"error": f"Signing failed: {str(e)}"}), 500
+        db.session.rollback()
+        return jsonify({"error": f"signing_failed: {e}"}), 500

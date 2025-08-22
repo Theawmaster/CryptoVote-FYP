@@ -11,6 +11,9 @@ class Election(db.Model):
     id = db.Column(db.String(64), primary_key=True)
     name = db.Column(db.String(128), nullable=False)
 
+    # NEW: which RSA key this election uses
+    rsa_key_id = db.Column(db.String(128), nullable=True, index=True)  # make non-null later
+
     # make all datetimes tz-aware
     start_time  = db.Column(db.DateTime(timezone=True), nullable=True)
     end_time    = db.Column(db.DateTime(timezone=True), nullable=True)

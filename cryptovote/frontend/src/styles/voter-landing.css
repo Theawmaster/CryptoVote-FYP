@@ -7,8 +7,8 @@
   --vl-subtle:#6b7280;
   --vl-shadow:0 1px 8px rgba(0,0,0,.06);
   --vl-accent:#04aa96;
-  --vl-accent-hover:#06ceb6;
-  --vl-accent-dark-hover:#0ea371;
+  --vl-accent-hover:#04a290;
+  --vl-accent-dark-hover:#069a7c;
 }
 .dark .voter-landing{
   --vl-bg:#111827;
@@ -52,7 +52,7 @@
 .vl-start{
   align-self:flex-start;
   height:36px; padding:0 14px; border:none; border-radius:12px;
-  background:#10b981; color:#fff; font-weight:600; cursor:pointer;
+  background:#08ad91; color:#fff; font-weight:600; cursor:pointer;
   transition:transform .08s ease, background .12s ease;
 }
 .vl-start:hover{ background:var(--vl-accent-hover); }
@@ -244,3 +244,67 @@
   }
   .dark .right-panel-voter{ border-top-color: #374151; }
 }
+
+/* in voter-landing.css */
+.vl-card.selected { outline: 2px solid var(--teal, #0ea5a5); }
+
+/* ballot layout */
+.ballot-card {
+  background: var(--card, #fff);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  border: 1px solid rgba(0,0,0,.06);
+  max-width: 720px;
+}
+.ballot-header {
+  border-bottom: 1px solid rgba(0,0,0,.08);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+.ballot-title { font-weight: 600; }
+
+.ballot-list { display: grid; gap: 10px; }
+.ballot-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid rgba(0,0,0,.08);
+  border-radius: 10px;
+  background: #fafafa;
+}
+.ballot-row.is-selected { outline: 2px solid #14b8a6; background: #f0fffd; }
+.ballot-name { font-weight: 500; }
+.ballot-actions { display: flex; gap: 8px; }
+
+/* success circle */
+.complete-icon {
+  width: 88px; height: 88px; border-radius: 50%;
+  border: 3px solid #14b8a6; margin: 12px 0;
+  background: radial-gradient(circle at 55% 45%, rgba(20,184,166,.15) 0 55%, transparent 56%);
+}
+
+/* buttons */
+.btn {
+  border-radius: 8px; padding: 8px 14px; font-weight: 600;
+  border: 1px solid transparent; cursor: pointer;
+}
+.btn:disabled { opacity: .65; cursor: not-allowed; }
+.btn-primary { background: #14b8a6; color: #fff; }
+.btn-primary:hover { filter: brightness(.95); }
+.btn-outline { background: #fff; border-color: rgba(0,0,0,.15); }
+.btn-outline:hover { background: #f7f7f7; }
+.btn.wide { width: 100%; }
+
+/* right sidebar visuals to match the sketch */
+.ballot-sidebar { background: #d0f0ed; display: flex; align-items: center; }
+.sidebar-inner { width: 100%; display: grid; place-items: center; gap: 16px; padding: 24px 16px; }
+.sb-logo { max-width: 180px; height: auto; }
+.sb-logo.small { max-width: 140px; opacity: .9; }
+.shield {
+  width: 64px; height: 72px; border-radius: 12px;
+  background: linear-gradient(180deg, #e7fffb, #b7efe8);
+  border: 2px solid #9fe4dc;
+}
+.sb-title { font-size: 20px; font-weight: 700; }
