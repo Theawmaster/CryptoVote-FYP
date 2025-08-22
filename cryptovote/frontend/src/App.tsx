@@ -14,6 +14,8 @@ import AdminLogin from './pages/admin-dev/AdminLogin';
 import AdminLanding from './pages/admin-dev/AdminLandingPage';
 import AdminElectionPage from './pages/admin-dev/AdminElectionPage';
 
+import VoterLandingPage from './pages/voter/VoterLandingPage';
+
 function AnimatedRoutes() {
   const location = useLocation();
 
@@ -32,6 +34,9 @@ function AnimatedRoutes() {
 
         <Route path="/admin/landing" element={<AdminLanding />} />
         <Route path="/admin/manage/:electionId" element={<AdminElectionPage />} />
+
+        <Route path="/voter" element={<VoterLandingPage />} />
+
       </Routes>
     </AnimatePresence>
   );

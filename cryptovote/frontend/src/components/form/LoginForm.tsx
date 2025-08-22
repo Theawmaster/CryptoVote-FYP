@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import '../../styles/auth.css';
 import '../../styles/voter-auth.css';
+import { useNavigate } from 'react-router-dom'; 
 
 import Toast from '../ui/Toast';
 import { handleLogin } from '../../services/voter/handleLogin';
@@ -13,6 +14,8 @@ const LoginForm: React.FC = () => {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [otpStage, setOtpStage] = useState(false);
+
+  const navigate = useNavigate(); 
 
   const [toast, setToast] = useState<{ type: ToastKind; msg: string } | null>(null);
   const showToast = (type: ToastKind, msg: string, ms = 3000) => {
@@ -36,6 +39,16 @@ const LoginForm: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('voterEmail', email);
   }, [email]);
+
+  useEffect(() => {
+  const msg = sessionStorage.getItem('toast.msg');
+  const kind = (sessionStorage.getItem('toast.kind') as 'success'|'error'|'info') || 'info';
+  if (msg) {
+    showToast(kind, msg);
+    sessionStorage.removeItem('toast.msg');
+    sessionStorage.removeItem('toast.kind');
+  }
+}, []);
 
   const onLogin = async () => {
     if (!email.trim()) {
@@ -74,8 +87,7 @@ const LoginForm: React.FC = () => {
         otp,
         showToast,
         () => {
-          // 👇 TODO: replace with your voter landing route
-          // e.g., navigate('/voter/home')
+           navigate('/voter', { replace: true });
           console.log('OTP ok → route user');
         },
         controller.signal

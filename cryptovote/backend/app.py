@@ -8,12 +8,14 @@ from routes.whoami import whoami_bp
 from routes.logout import logout_bp
 from routes.cast_vote import cast_vote_bp
 from routes.blind_sign import blind_sign_bp
-from routes.admin_routes import admin_bp
+from routes.admin.admin_routes import admin_bp
+from routes.voter_routes import voter_bp
 from routes.admin.audit_routes import audit_bp
 from routes.admin.download_routes import download_bp
 from routes.admin.election_routes import election_bp
 from routes.admin.security_routes import bp as security_bp
-from routes.admin.admin_me import bp_me        # or whatever filename you used
+from routes.admin.admin_me import bp_me
+from routes.public_keys import keys_bp
 from dotenv import load_dotenv
 from utilities.network_utils import is_ntu_ip
 from flask_cors import CORS 
@@ -27,6 +29,8 @@ TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "templates")
 app = Flask(__name__, template_folder=TEMPLATES_DIR)
 app.config.from_pyfile("config.py")
 app.secret_key = os.getenv("SECRET_KEY")
+
+
 
 is_dev = app.debug or os.getenv("FLASK_ENV") == "development"
 
@@ -53,11 +57,13 @@ app.register_blueprint(cast_vote_bp)
 app.register_blueprint(blind_sign_bp)
 app.register_blueprint(whoami_bp)
 app.register_blueprint(admin_bp, url_prefix="/admin")
+app.register_blueprint(voter_bp, url_prefix="/voter")
 app.register_blueprint(audit_bp,    url_prefix="/admin")
 app.register_blueprint(download_bp, url_prefix="/admin")
 app.register_blueprint(election_bp, url_prefix="/admin")
 app.register_blueprint(bp_me, url_prefix="/admin")
 app.register_blueprint(security_bp, url_prefix="/admin")
+app.register_blueprint(keys_bp)
 
 # IP Restriction Middleware
 @app.before_request

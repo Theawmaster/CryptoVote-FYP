@@ -4,7 +4,7 @@ class Voter(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     email_hash = db.Column(db.String(64), unique=True, nullable=False)
-    vote_role = db.Column(db.String(20), default='voter')  # 'admin', 'auditor', 'voter'
+    vote_role = db.Column(db.String(20), default='voter')  # 'admin', 'voter'
     public_key = db.Column(db.Text, nullable=True)
     verification_token = db.Column(db.String(128), nullable=True)
     is_verified = db.Column(db.Boolean, default=False)
