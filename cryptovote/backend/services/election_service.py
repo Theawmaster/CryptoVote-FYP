@@ -105,6 +105,9 @@ def create_new_election(data, admin_email, ip_addr):
         if field not in data or not data[field]:
             return jsonify({"error": f"Missing required field: {field}"}), 400
 
+    # ✅ ensure a non-null RSA key id (DB has NOT NULL on rsa_key_id)
+    rsa_key_id = (data.get("rsa_key_id") or "default_rsa_key").strip()
+
     existing = db.session.query(Election).filter_by(id=data["id"]).first()
     if existing:
         return jsonify({"error": "Election with this ID already exists."}), 400
@@ -113,14 +116,15 @@ def create_new_election(data, admin_email, ip_addr):
 
     try:
         election = Election(
-            id=data["id"],
-            name=data["name"],
+            id=data["id"].strip(),
+            name=data["name"].strip(),
+            rsa_key_id=rsa_key_id,                 # ✅ set the key here
             start_time=None,
             end_time=None,
             is_active=False,
             has_started=False,
             has_ended=False,
-            tally_generated=False
+            tally_generated=False,
         )
         db.session.add(election)
 
@@ -145,6 +149,7 @@ def create_new_election(data, admin_email, ip_addr):
             "election": {
                 "id": election.id,
                 "name": election.name,
+                "rsa_key_id": election.rsa_key_id,  # include for clarity
                 "start_time": None,
                 "end_time": None,
                 "is_active": election.is_active,

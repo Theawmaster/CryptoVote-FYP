@@ -6,7 +6,7 @@ class VoterElectionStatus(db.Model):
 
     id          = db.Column(db.Integer, primary_key=True)
     voter_id    = db.Column(db.Integer, db.ForeignKey("voter.id"), index=True, nullable=False)
-    election_id = db.Column(db.String,  db.ForeignKey("election.id"), index=True, nullable=False)
+    election_id = db.Column(db.String,  db.ForeignKey("elections.id"), index=True, nullable=False)
 
     token_issued_at = db.Column(db.DateTime, nullable=True)  # set when blind-sign succeeds
     voted_at        = db.Column(db.DateTime, nullable=True)  # optional, set when cast-vote succeeds

@@ -30,14 +30,17 @@ def election_status(election_id):
 @election_bp.route("/create-election", methods=["POST"])
 @role_required("admin")
 def create_election():
-    data = request.get_json() or {}
-    # Expecting payload like: {"id": "...", "name": "..."}
+    data = request.get_json(silent=True) or {}
     missing = [k for k in ("id", "name") if not data.get(k)]
     if missing:
         return jsonify({"error": f"Missing required field: {missing[0]}"}), 400
 
+    # 🔧 ensure a key is always present
+    data["rsa_key_id"] = data.get("rsa_key_id") or "default_rsa_key"
+
     admin_email = session.get("email")
     return create_new_election(data, admin_email, request.remote_addr)
+
 
 @election_bp.route("/elections", methods=["GET"])
 @role_required("admin")
