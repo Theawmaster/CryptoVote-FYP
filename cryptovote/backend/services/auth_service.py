@@ -7,7 +7,7 @@ SGT = ZoneInfo("Asia/Singapore")
 
 # In-memory nonce store
 nonce_store = {}
-NONCE_TTL_SECONDS = 300
+NONCE_TTL_SECONDS = 300  # Time-to-live for nonces in seconds
 
 def get_email_hash(email):
     import hashlib
