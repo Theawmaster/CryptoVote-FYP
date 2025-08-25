@@ -54,8 +54,17 @@ def blind_sign(election_id):
         return jsonify({"error": "key_mismatch_for_election"}), 400
 
     # ---- prevent duplicate issuance (keep your current policy) ----
-    if getattr(voter, "has_token", False):
-        return jsonify({"error": "token_already_issued"}), 403
+    already_issued = (
+        db.session.query(VES.id)
+        .filter(
+            VES.voter_id == voter.id,
+            VES.election_id == election_id,
+            VES.token_issued_at.isnot(None),
+        )
+        .first()
+    )
+    if already_issued:
+        return jsonify({"error": "token_already_issued_for_this_election"}), 403
 
     try:
         blinded_int = int(blinded_token_hex, 16)
@@ -75,7 +84,6 @@ def blind_sign(election_id):
         issuance_fingerprint = f"{email_hash}|{election_id}|{issued_time.isoformat()}"
         issuance_hash = hashlib.sha256(issuance_fingerprint.encode()).hexdigest()
 
-        voter.has_token = True  # your current policy (one token at a time per voter)
         issued = IssuedToken(
             token_hash=issuance_hash,
             used=False,
