@@ -25,6 +25,7 @@ def _asset_path(filename: str) -> str:
 @receipt_bp.get("/voter/receipt")
 def vote_receipt():
     election_name = request.args.get("election_name", "Election")
+    election_id = request.args.get("election_id")
     ts = datetime.now(SGT).strftime("%d %b %Y, %H:%M %Z")
     support_ref = secrets.token_hex(6)
 
@@ -88,6 +89,7 @@ def vote_receipt():
     # fallback plain text
     text = (
         f"Vote receipt — {election_name}\n"
+        f"Election ID: {election_id}\n"
         f"Timestamp: {ts}\n"
         f"Support Ref: {support_ref}\n"
         f"This receipt contains no voting choices and cannot be used to prove how you voted.\n"

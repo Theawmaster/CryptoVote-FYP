@@ -1,8 +1,9 @@
 # routes/voter.py
 from flask import Blueprint, jsonify, session
-from sqlalchemy import func, and_, exists, not_
+from sqlalchemy import func, and_, or_
 from models.db import db
 from models.election import Election, Candidate
+from models.voter import Voter
 from models.voter_election_status import VoterElectionStatus as VES
 from utilities.auth_utils import role_required
 
@@ -12,20 +13,31 @@ voter_bp = Blueprint("voter", __name__)
 @role_required("voter")
 def list_active_elections():
     """
-    Return elections that are currently open for voting:
-      is_active = TRUE AND has_started = TRUE AND has_ended = FALSE
-    Includes a lightweight candidate_count for quick display.
+    Return elections that are open for voting and hide any election where this voter
+    has either been issued a token OR has voted.
     """
-    
-    voter_id = session.get("voter_id")
 
-    # Hide if a token has already been issued for this voter & election
-    hide_if_issued = exists().where(and_(
-        VES.voter_id == voter_id,
-        VES.election_id == Election.id,
-        VES.token_issued_at.isnot(None)
-    ))
-    
+    # Resolve voter deterministically from the session email
+    email_hash = session.get("email")
+    if not email_hash:
+        return jsonify({"error": "unauthenticated"}), 401
+
+    voter = Voter.query.filter_by(email_hash=email_hash).first()
+    if not voter or not voter.is_verified or not voter.logged_in:
+        return jsonify({"error": "forbidden"}), 403
+    voter_id = voter.id
+
+    # Correlated NOT EXISTS(VES where voter_id matches AND election_id matches AND (token_issued_at or voted_at))
+    hide_exists = (
+        db.session.query(VES.id)
+        .filter(
+            VES.voter_id == voter_id,
+            VES.election_id == Election.id,
+            or_(VES.token_issued_at.isnot(None), VES.voted_at.isnot(None)),
+        )
+        .exists()
+    )
+
     rows = (
         db.session.query(
             Election.id,
@@ -42,7 +54,7 @@ def list_active_elections():
             Election.is_active.is_(True),
             Election.has_started.is_(True),
             Election.has_ended.is_(False),
-            not_(hide_if_issued),   # <-- anti-filter
+            ~hide_exists,   # NOT EXISTS
         )
         .group_by(
             Election.id,
@@ -57,8 +69,8 @@ def list_active_elections():
         .all()
     )
 
-    def to_dict(r):
-        return {
+    return jsonify({
+        "elections": [{
             "id": r.id,
             "name": r.name,
             "start_time": r.start_time.isoformat() if r.start_time else None,
@@ -67,6 +79,5 @@ def list_active_elections():
             "has_started": r.has_started,
             "has_ended": r.has_ended,
             "candidate_count": int(r.candidate_count or 0),
-        }
-
-    return jsonify({"elections": [to_dict(r) for r in rows]}), 200
+        } for r in rows]
+    }), 200

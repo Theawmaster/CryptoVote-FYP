@@ -78,6 +78,84 @@
 .vl-empty{ background:var(--vl-card); border:1px dashed var(--vl-border); border-radius:16px; padding:20px; text-align:center; margin-top:8px; }
 .vl-subtle{ opacity:.7; font-size:.9rem; }
 
+/* Inline field row: input (fills) + button (auto) */
+.inline-field{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+/* Normalized input to match button height */
+.vl-input{
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--vl-border);
+  background: var(--vl-card);
+  color: var(--vl-fg);
+  border-radius: 10px;
+  font: inherit;
+}
+.vl-input::placeholder{ color: var(--vl-subtle); }
+.vl-input:focus{
+  outline: 2px solid var(--vl-accent);
+  outline-offset: 0;
+  border-color: transparent;
+}
+
+/* Make the primary button the same height */
+.vl-start{ height: 40px; padding: 0 16px; }
+
+/* Mobile: stack the button below, full width, still evenly spaced */
+@media (max-width: 520px){
+  .inline-field{
+    grid-template-columns: 1fr;
+  }
+  .inline-field .vl-start{
+    width: 100%;
+  }
+}
+
+
+/* Toasts */
+.toast{
+  position: fixed;
+
+  /* center horizontally */
+  left: 50%;
+  transform: translateX(-50%);
+
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  z-index: 60;
+
+  max-width: min(560px, 92vw);
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  color: #fff;
+
+  text-align: center;           /* nicer for multi-line toasts */
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  animation: toast-in .18s ease-out;
+}
+
+
+/* solid variants */
+.toast.success{ background:#10b981; border-color:#10b981; } /* emerald-500 */
+.toast.error  { background:#ef4444; border-color:#ef4444; } /* red-500     */
+.toast.info   { background:#2563eb; border-color:#2563eb; } /* blue-600    */
+.toast.warn   { background:#f59e0b; border-color:#f59e0b; color:#111827; } /* amber-500 with dark text */
+
+/* global dark mode needs no special case — solids stay solid */
+
+/* subtle slide-up */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
 /* Skeleton */
 .skeleton{ position:relative; overflow:hidden; }
 .skeleton::after{
