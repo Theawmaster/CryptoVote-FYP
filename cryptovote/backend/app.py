@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 from utilities.network_utils import is_ntu_ip
 from routes.receipt import receipt_bp
 from routes.results import results_bp
+from utilities.session_utils import register_session_ttl
 from flask_cors import CORS 
 import os
 
@@ -38,6 +39,7 @@ app.secret_key = os.getenv("SECRET_KEY")
 is_dev = app.debug or os.getenv("FLASK_ENV") == "development"
 
 app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE = 'Lax' if is_dev else 'None',
     SESSION_COOKIE_SECURE = not is_dev,             # False in dev (HTTP), True in prod (HTTPS)
 )
@@ -70,6 +72,7 @@ app.register_blueprint(candidate_list_bp, url_prefix="/voter")
 app.register_blueprint(receipt_bp)
 app.register_blueprint(results_bp)
 app.register_blueprint(keys_bp)
+register_session_ttl(app, idle_ttl=2*60, abs_ttl=8*60*60)
 
 # IP Restriction Middleware
 @app.before_request
