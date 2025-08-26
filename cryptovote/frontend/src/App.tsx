@@ -1,7 +1,9 @@
+// src/App.tsx
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { FaMoon, FaSun } from 'react-icons/fa6';
+
 import OnboardingLandingPage from './pages/onboarding/OnboardingLandingPage';
 import Onboarding1 from './pages/onboarding/Onboarding1';
 import Onboarding2 from './pages/onboarding/Onboarding2';
@@ -10,19 +12,21 @@ import Onboarding4 from './pages/onboarding/Onboarding4';
 
 import VoterAuth from './pages/voter/VoterAuth';
 import AdminLogin from './pages/admin-dev/AdminLogin';
-
 import AdminLanding from './pages/admin-dev/AdminLandingPage';
 import AdminElectionPage from './pages/admin-dev/AdminElectionPage';
 
 import VoterLandingPage from './pages/voter/VoterLandingPage';
-import VoterBallotPage from "./pages/voter/VoterBallotPage";
-import VoteCompletePage from "./pages/voter/VoteCompletePage";
+import VoterBallotPage from './pages/voter/VoterBallotPage';
+import VoteCompletePage from './pages/voter/VoteCompletePage';
 
 import { CredentialProvider } from './ctx/CredentialContext';
+import { useSessionTimeout } from './hooks/useSessionTimeout';
+
+// import the modal styles ONCE (global)
+import './styles/session-timeout.css';
 
 function AnimatedRoutes() {
   const location = useLocation();
-
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
@@ -42,48 +46,44 @@ function AnimatedRoutes() {
         <Route path="/voter" element={<VoterLandingPage />} />
         <Route path="/voter/elections/:id" element={<VoterBallotPage />} />
         <Route path="/voter/elections/:id/complete" element={<VoteCompletePage />} />
-
       </Routes>
     </AnimatePresence>
   );
 }
 
 const MoonIcon = FaMoon as unknown as React.FC<{ size?: number }>;
-const SunIcon = FaSun as unknown as React.FC<{ size?: number }>;
+const SunIcon  = FaSun  as unknown as React.FC<{ size?: number }>;
 
-function App() {
-
+export default function App() {
   const [darkMode, setDarkMode] = useState(false);
 
-  // Load dark mode preference from localStorage on initial render
+  // --- session timeout hook (frontend idle + absolute timer) ---
+  const { showWarn, secondsLeft, staySignedIn, logoutNow } = useSessionTimeout();
+
+  // load dark preference
   useEffect(() => {
     const stored = localStorage.getItem('darkMode');
-    if (stored === 'true') 
-      setDarkMode(true); 
-    }, []);
+    if (stored === 'true') setDarkMode(true);
+  }, []);
 
-  // Save dark mode preference to localStorage whenever it changes
+  // apply + persist dark preference
   useEffect(() => {
     const html = document.documentElement;
-    if (darkMode) {
-      html.classList.add('dark');
-    } else {
-      html.classList.remove('dark');
-    }
+    if (darkMode) html.classList.add('dark');
+    else html.classList.remove('dark');
     localStorage.setItem('darkMode', String(darkMode));
   }, [darkMode]);
 
-  
   return (
     <CredentialProvider>
       <Router>
         <div className="relative min-h-screen bg-white dark:bg-gray-900 text-black dark:text-white transition-colors duration-300">
-          {/* Toggle Button */}
+          {/* Theme toggle */}
           <button
             className="absolute top-4 right-4 z-50 w-16 h-8 
-            bg-gray-300 hover:bg-teal-500 
-            dark:bg-gray-400 dark:hover:bg-teal-400 
-            rounded-full flex items-center px-1 shadow-inner transition-all"        
+                       bg-gray-300 hover:bg-teal-500 
+                       dark:bg-gray-400 dark:hover:bg-teal-400 
+                       rounded-full flex items-center px-1 shadow-inner transition-all"
             onClick={() => setDarkMode(!darkMode)}
           >
             <div
@@ -95,11 +95,33 @@ function App() {
             </div>
           </button>
 
+          {/* Routes */}
           <AnimatedRoutes />
+
+          {/* Session timeout modal (appears above all routes) */}
+          {showWarn && (
+            <div
+              className="session-modal-backdrop"
+              role="dialog"
+              aria-modal="true"
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') staySignedIn();
+              }}
+            >
+              <div className="session-modal">
+                <h3>Stay signed in?</h3>
+                <p>
+                  Your session will expire in <b>{secondsLeft ?? 60}</b> seconds due to inactivity.
+                </p>
+                <div className="session-actions">
+                  <button className="btn btn-outline" onClick={logoutNow}>Log out</button>
+                  <button className="btn btn-primary" onClick={staySignedIn}>Stay signed in</button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </Router>
     </CredentialProvider>
   );
 }
-
-export default App;

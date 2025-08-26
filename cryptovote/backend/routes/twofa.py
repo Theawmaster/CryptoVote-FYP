@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify, session, current_app   # ← add 
 import hashlib, pyotp
 from models.voter import Voter
 from models.db import db
+from time import time
 
 otp_bp = Blueprint('otp', __name__)
 # cooldown now keyed by (email_hash, ip)
@@ -72,6 +73,10 @@ def verify_2fa():
     session['role'] = voter.vote_role
     session['twofa'] = True
     session['login_at'] = now.isoformat()
+    
+    now_ts = int(time())
+    session['sess_created_at'] = now_ts
+    session['sess_last_seen']  = now_ts
     # (optional) make session last a workday in prod
     # session.permanent = True
     # current_app.permanent_session_lifetime = timedelta(hours=8)

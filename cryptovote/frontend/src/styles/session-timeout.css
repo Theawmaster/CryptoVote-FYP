@@ -1,0 +1,71 @@
+/* src/styles/session-timeout.css */
+
+/* Backdrop */
+.session-modal-backdrop{
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(0,0,0,.45);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+/* Modal panel */
+.session-modal{
+  width: min(520px, 92vw);
+  border-radius: 16px;
+  padding: 18px 18px 16px;
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  animation: ses-pop .15s ease-out;
+}
+.session-modal h3{
+  margin: 0 0 6px;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+.session-modal p{ margin: 0 0 12px; }
+
+/* Actions */
+.session-actions{
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* Buttons (reuse your palette) */
+.btn{
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.btn:disabled{ opacity:.65; cursor:not-allowed; }
+.btn-primary{ background:#0aaf9b; color:#fff; }
+.btn-primary:hover{ filter:brightness(.96); }
+.btn-outline{
+  background:#fff; color:#111827; border-color:#d1d5db;
+}
+.btn-outline:hover{ background:#2cdac3; }
+
+/* Dark mode */
+.dark .session-modal{
+  background: #0f172a;
+  color: #e5e7eb;
+  border-color: #334155;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+.dark .btn-outline{
+  background:#1f2937; color:#e5e7eb; border-color:#475569;
+}
+.dark .btn-outline:hover{ background:#15a597; }
+
+/* Motion */
+@keyframes ses-pop{
+  from{ transform: translateY(6px) scale(.98); opacity: 0; }
+  to  { transform: translateY(0)   scale(1);    opacity: 1; }
+}
