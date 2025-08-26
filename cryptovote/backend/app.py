@@ -20,6 +20,7 @@ from routes.public_keys import keys_bp
 from dotenv import load_dotenv
 from utilities.network_utils import is_ntu_ip
 from routes.receipt import receipt_bp
+from routes.results import results_bp
 from flask_cors import CORS 
 import os
 
@@ -67,6 +68,7 @@ app.register_blueprint(bp_me, url_prefix="/admin")
 app.register_blueprint(security_bp, url_prefix="/admin")
 app.register_blueprint(candidate_list_bp, url_prefix="/voter")
 app.register_blueprint(receipt_bp)
+app.register_blueprint(results_bp)
 app.register_blueprint(keys_bp)
 
 # IP Restriction Middleware

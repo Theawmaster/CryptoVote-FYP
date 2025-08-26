@@ -24,7 +24,6 @@ async function getRsaPub(rsaKeyId: string): Promise<RsaPub> {
   const body: any = await safeJson(res);
   if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
 
-  // Accept any of: {rsa:[...]}, {rsa:{...}}, or a single key at root.
   let candidates: any[] = [];
   if (Array.isArray(body?.rsa)) candidates = body.rsa;
   else if (body?.rsa && typeof body.rsa === 'object') candidates = [body.rsa];
@@ -36,7 +35,6 @@ async function getRsaPub(rsaKeyId: string): Promise<RsaPub> {
   return normalizeRsaKey(raw);
 }
 
-
 type Election = {
   id: string;
   name: string;
@@ -46,7 +44,7 @@ type Election = {
   has_started: boolean;
   has_ended: boolean;
   candidate_count: number;
-  rsa_key_id?: string; 
+  rsa_key_id?: string;
 };
 
 function useVoterMe() {
@@ -60,8 +58,6 @@ function useVoterMe() {
   return me;
 }
 
-
-
 const VoterLandingPage: React.FC = () => {
   const nav = useNavigate();
   useEnsureVoter();
@@ -71,9 +67,34 @@ const VoterLandingPage: React.FC = () => {
   const [rows, setRows] = useState<Election[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null); 
+  const [busyId, setBusyId] = useState<string | null>(null);
 
-  
+  // Results & Audit lookup state
+  const [lookupId, setLookupId] = useState('');
+  const [resLoading, setResLoading] = useState(false);
+  const [resErr, setResErr] = useState<string | null>(null);
+  const [resData, setResData] = useState<any>(null);
+
+  // UX helpers: toast + invalid input highlight
+  const [toast, setToast] = useState<{ type: 'info' | 'error' | 'success'; msg: string } | null>(null);
+  const [inputInvalid, setInputInvalid] = useState(false);
+
+  function showToast(type: 'info' | 'error' | 'success', msg: string) {
+    setToast({ type, msg });
+    window.clearTimeout((showToast as any)._t);
+    (showToast as any)._t = window.setTimeout(() => setToast(null), 3200);
+  }
+
+  function validateElectionId(raw: string) {
+    const id = raw.trim();
+    if (!id) return { ok: false, reason: 'Please enter an election ID.' };
+    const ok =
+      /^election[_-]ver[_-]?\d+$/i.test(id) ||
+      /^[A-Za-z0-9_-]{3,64}$/.test(id);
+    return ok
+      ? { ok: true }
+      : { ok: false, reason: 'Invalid ID. Use letters, numbers, - or _, 3–64 chars (e.g. election_ver_9).' };
+  }
 
   useEffect(() => {
     let alive = true;
@@ -96,64 +117,116 @@ const VoterLandingPage: React.FC = () => {
 
   const empty = useMemo(() => !loading && !err && rows.length === 0, [loading, err, rows]);
 
-  // --- Start flow: prepare blind-signed credential then go ballot ---
-const startElection = async (electionId: string) => {
-  try {
-    setBusyId(electionId);
-    setErr(null);
+  const startElection = async (electionId: string) => {
+    try {
+      setBusyId(electionId);
+      setErr(null);
 
-    // 1) election detail
-    const ed = await fetch(`/voter/elections/${electionId}`, { credentials: 'include' });
-    const ej: any = await safeJson(ed);
-    if (!ed.ok) throw new Error(ej.error || 'Failed to load election detail');
-    const rsaKeyId: string = ej.rsa_key_id;
+      // 1) election detail
+      const ed = await fetch(`/voter/elections/${electionId}`, { credentials: 'include' });
+      const ej: any = await safeJson(ed);
+      if (!ed.ok) throw new Error(ej.error || 'Failed to load election detail');
+      const rsaKeyId: string = ej.rsa_key_id;
 
-    // 2) public key (normalized)
-    const pub = await getRsaPub(rsaKeyId);
+      // 2) public key (normalized)
+      const pub = await getRsaPub(rsaKeyId);
 
-    // 3) generate + blind
-    const token = genToken();
-    const { blindedHex, r } = await blindToken(token, pub);
+      // 3) generate + blind
+      const token = genToken();
+      const { blindedHex, r } = await blindToken(token, pub);
 
-    // 4) blind-sign
-  
-    const bs = await fetch(`/elections/${electionId}/blind-sign`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ blinded_token_hex: blindedHex, rsa_key_id: rsaKeyId })
-    });
-    const bj: any = await safeJson(bs);
-    if (!bs.ok) throw new Error(bj.error || 'Blind-sign failed');
+      // 4) blind-sign
+      const bs = await fetch(`/elections/${electionId}/blind-sign`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blinded_token_hex: blindedHex, rsa_key_id: rsaKeyId })
+      });
+      const bj: any = await safeJson(bs);
+      if (!bs.ok) throw new Error(bj.error || 'Blind-sign failed');
 
-    const signedBlindedHex =
-    bj.signed_blinded_token_hex ??
-    bj.signed_blinded_token ??
-    bj.signed ??
-    null;
-    if (!signedBlindedHex) throw new Error('Server did not return signed_blinded_token');
+      const signedBlindedHex =
+        bj.signed_blinded_token_hex ??
+        bj.signed_blinded_token ??
+        bj.signed ??
+        null;
+      if (!signedBlindedHex) throw new Error('Server did not return signed_blinded_token');
 
+      // 5) unblind -> final signature
+      const signatureHex = unblindSignature(signedBlindedHex, r, pub);
 
-    // 5) unblind -> final signature
-    const signatureHex = unblindSignature(bj.signed_blinded_token_hex, r, pub);
+      // 6) store ephemeral cred + go ballot
+      const credObj = { electionId, token, signatureHex, rsaKeyId };
+      setCred(credObj);
+      try { sessionStorage.setItem('ephemeral_cred', JSON.stringify(credObj)); } catch {}
+      nav(`/voter/elections/${electionId}`, { state: { cred: credObj } });
+    } catch (e: any) {
+      setErr(e.message || 'Failed to prepare credential');
+    } finally {
+      setBusyId(null);
+    }
+  };
 
-    // 6) store ephemeral cred + go ballot
-    const credObj = { electionId, token, signatureHex, rsaKeyId };
-    console.log('Prepared cred →', credObj);
-    setCred(credObj);
-    try { sessionStorage.setItem("ephemeral_cred", JSON.stringify(credObj)); } catch {}
-    nav(`/voter/elections/${electionId}`, { state: { cred: credObj } });
-  } catch (e: any) {
-    setErr(e.message || 'Failed to prepare credential');
-  } finally {
-    setBusyId(null);
+  async function fetchResults(eid: string) {
+    setResErr(null); setResData(null); setResLoading(true);
+    try {
+      const r = await fetch(`/results/${encodeURIComponent(eid)}`, { credentials: 'include' });
+      const j = await safeJson(r);
+      if (!r.ok) throw new Error(j.error || `Failed to fetch results for ${eid}`);
+      setResData(j);
+    } catch (e: any) {
+      const msg = e?.message || 'Failed to fetch results';
+      setResErr(msg);
+      showToast('error', msg);
+    } finally { setResLoading(false); }
   }
-};
 
+  async function downloadJson(url: string, filename: string) {
+    const r = await fetch(url, { credentials: 'include' });
+    if (!r.ok) {
+      const j = await safeJson(r);
+      const msg = j.error || `HTTP ${r.status}`;
+      showToast('error', msg);
+      throw new Error(msg);
+    }
+    let blob: Blob;
+    try {
+      const j = await r.clone().json();
+      blob = new Blob([JSON.stringify(j, null, 2)], { type: 'application/json' });
+    } catch {
+      blob = await r.blob();
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('success', 'Download started.');
+  }
+
+  function onSubmitResults(e: React.FormEvent) {
+    e.preventDefault();
+    const { ok, reason } = validateElectionId(lookupId);
+    if (!ok) {
+      setInputInvalid(true);
+      showToast('error', reason!);
+      return;
+    }
+    setInputInvalid(false);
+    if (!resLoading) fetchResults(lookupId.trim());
+  }
 
   return (
     <div className="voter-landing">
       <main className="vl-main">
+
+        {/* Toast */}
+        {toast && (
+          <div className={`toast ${toast.type}`} role="alert" aria-live="assertive">
+            {toast.msg}
+          </div>
+        )}
+
         {/* Header */}
         <div className="vl-header-row">
           <h2>Your Voting Options</h2>
@@ -203,6 +276,76 @@ const startElection = async (electionId: string) => {
               ))}
             </div>
           )}
+
+          {/* Results & Audit */}
+          <div className="vl-card" style={{ marginTop: 16 }}>
+            <div className="vl-card-title">Results &amp; Audit</div>
+
+            {/* Enter-to-submit via form */}
+            <form className="inline-field" onSubmit={onSubmitResults}>
+              <input
+                id="eid"
+                className="vl-input"
+                placeholder="e.g. election_ver_1"
+                value={lookupId}
+                onChange={e => setLookupId(e.target.value)}
+                aria-label="Election ID"
+              />
+              <button
+                type="submit"
+                className="vl-start"
+                disabled={resLoading || !lookupId.trim()}
+                aria-label="View results"
+              >
+                {resLoading ? 'Checking…' : 'View Results'}
+              </button>
+            </form>
+
+            {resData && (
+              <div style={{ marginTop: 12 }}>
+                <div className="vl-card-title" style={{ fontSize: 16 }}>
+                  {resData.election?.name || resData.election?.id} — {resData.status === 'final' ? 'Final' : 'Pending'}
+                </div>
+                <div className="vl-card-meta" style={{ marginTop: 8 }}>
+                  <div>Last updated: {resData.last_updated ? new Date(resData.last_updated).toLocaleString() : '—'}</div>
+                </div>
+
+                <div style={{ marginTop: 10 }}>
+                  <table className="vl-table">
+                    <thead><tr><th>Candidate</th><th>Total</th><th></th></tr></thead>
+                    <tbody>
+                      {(resData.candidates || []).map((c: any) => {
+                        const isWinner = (resData.winner_ids || []).includes(c.id);
+                        return (
+                          <tr key={c.id}>
+                            <td>{c.name}</td>
+                            <td>{c.total ?? '—'}</td>
+                            <td>{isWinner ? <span className="badge">Winner</span> : null}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <button
+                    className="vl-start"
+                    onClick={() => downloadJson(`/results/${encodeURIComponent(lookupId)}/audit-bundle`, `audit_${lookupId}.json`)}
+                  >
+                    Download Audit Bundle
+                  </button>
+                  <button
+                    className="vl-start"
+                    title="Your acknowledgement of vote"
+                    onClick={() => downloadJson(`/receipts/${encodeURIComponent(lookupId)}`, `receipt_${lookupId}.json`)}
+                  >
+                    Download My Receipt
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </section>
 
         {/* RIGHT TEAL SIDEBAR */}
