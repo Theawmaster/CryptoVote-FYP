@@ -6,9 +6,18 @@ from models.db import db
 from io import BytesIO
 from fpdf import FPDF
 from models.suspicious_activity import SuspiciousActivity
+from datetime import timezone
 
 SGT = ZoneInfo("Asia/Singapore")
 bp  = Blueprint("security", __name__)
+
+def to_sgt(dt):
+    if dt is None:
+        return None
+    # assume DB stores UTC-naive; adjust if yours is different
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(SGT)
 
 def _parse_iso8601(s: str | None):
     if not s: return None
@@ -77,7 +86,7 @@ def list_suspicious():
             "ip_address": r.ip_address,
             "reason": r.reason,
             "route_accessed": r.route_accessed,
-            "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+            "timestamp": (to_sgt(r.timestamp).isoformat() if r.timestamp else None),
         }
 
     return jsonify({
@@ -114,9 +123,10 @@ def export_suspicious_csv():
 
     lines = ["id,email,ip_address,reason,route_accessed,timestamp"]
     for r in rows:
+        ts = to_sgt(r.timestamp)
         lines.append(",".join([
             str(r.id), esc(r.email), r.ip_address, esc(r.reason),
-            esc(r.route_accessed), (r.timestamp or "").isoformat()
+            esc(r.route_accessed), (ts.isoformat() if ts else "")
         ]))
     csv_data = "\n".join(lines)
     return Response(
@@ -205,10 +215,8 @@ def export_suspicious_pdf():
     for r in rows:
         ts = ""
         if getattr(r, "timestamp", None):
-            try:
-                ts = r.timestamp.strftime("%Y-%m-%d %H:%M:%S")
-            except Exception:
-                ts = str(r.timestamp)
+            ts_dt = to_sgt(r.timestamp)
+            ts = ts_dt.strftime("%Y-%m-%d %H:%M:%S %Z")  # shows SGT
 
         cells = [
             str(r.id),

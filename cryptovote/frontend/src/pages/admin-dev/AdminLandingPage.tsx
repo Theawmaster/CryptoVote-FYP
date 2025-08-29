@@ -10,6 +10,9 @@ import ElectionCard from '../../components/admin/ElectionCard';
 import { SecurityBell, SuspiciousDrawer } from '../../components/admin/SuspiciousDrawer';
 import { apiDownload } from '../../services/api';
 
+import Toast from '../../components/ui/Toast';                 // ← add
+import { useBackForwardLock } from '../../hooks/useBackForwardLock'; // ← add
+
 import '../../styles/admin-landing.css';
 
 type FilterKey = 'all' | 'active' | 'ended' | 'upcoming';
@@ -23,6 +26,8 @@ export default function AdminLandingPage() {
   const [filter, setFilter] = useState<FilterKey>('all');
   const [showCreate, setShowCreate] = useState(false);
 
+  const [lockToast, setLockToast] = useState<string | null>(null); // ← add
+
   const sec = useSuspicious();
 
   const filtered = useMemo(() => {
@@ -35,16 +40,35 @@ export default function AdminLandingPage() {
     }
   }, [elections, filter]);
 
-  function onMore(id: string) { navigate(`/admin/manage/${id}`, { state: { email } }); }
+  function onMore(id: string) {
+    navigate(`/admin/manage/${id}`, { state: { email }, replace: true });
+  }
 
-  // exports (reusing apiDownload)
+  // exports
   async function exportCsv() { await apiDownload('/admin/security/suspicious.csv', 'suspicious.csv'); }
   async function exportPdf() { await apiDownload('/admin/security/suspicious.pdf', 'suspicious.pdf'); }
+
+  // ---- Back/Forward lock for Admin Landing ----
+  useBackForwardLock({
+    enabled: true,
+    onAttempt: () => {
+      setLockToast('Use the sidebar or Logout to leave the admin console.');
+      window.clearTimeout((setLockToast as any)._t);
+      (setLockToast as any)._t = window.setTimeout(() => setLockToast(null), 2200);
+    },
+    // optional native prompt when closing tab/refreshing (keep or remove)
+    beforeUnloadMessage: 'Leave the admin console?',
+  });
 
   return (
     <div className="admin-landing">
       <LeftSidebar title="Admin Landing Page" />
       <main className="right-panel">
+        {/* Lock toast */}
+        {lockToast && (
+          <Toast type="info" message={lockToast} duration={2200} onClose={() => setLockToast(null)} />
+        )}
+
         <div className="mgr-header-row">
           <h2>Your Voting Campaigns</h2>
           <div className="flex items-center gap-3">
@@ -83,10 +107,7 @@ export default function AdminLandingPage() {
             </div>
 
             {showCreate && (
-              <CreateElectionForm onCreated={(e) => {
-                // optimistic prepend
-                // optional: refetch in useElections hook instead
-                // setElections(prev => [e, ...prev]);  // if you keep local state
+              <CreateElectionForm onCreated={() => {
                 setShowCreate(false);
               }} />
             )}

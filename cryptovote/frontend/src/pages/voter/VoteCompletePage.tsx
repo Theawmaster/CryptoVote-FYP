@@ -13,25 +13,13 @@ const VoteCompletePage: React.FC = () => {
 
   const [sending, setSending] = useState(false);
 
-  async function sendAckAndExit() {
-    try {
-      setSending(true);
-      await fetch("/voter/email-ack", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ election_id: electionId, election_name: name }),
-      });
-    } catch {
-      // ignore; we’ll still route back to keep UX smooth
-    } finally {
-      nav("/voter");
-    }
-  }
-
   async function downloadReceipt() {
   try {
-    const r = await fetch(`/voter/receipt?election_name=${encodeURIComponent(name)}`, {
+    const qs = new URLSearchParams({
+      election_name: name,
+      election_id: electionId || "unknown",
+    });
+    const r = await fetch(`/voter/receipt?${qs.toString()}`, {
       credentials: "include",
     });
     if (!r.ok) {
@@ -42,14 +30,16 @@ const VoteCompletePage: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    // Optional: infer filename from Content-Disposition header if present
-    a.download = "vote_receipt.pdf";
+    // Use server-provided filename if present; otherwise fall back.
+    const cd = r.headers.get("content-disposition");
+    const match = cd && /filename="([^"]+)"/i.exec(cd);
+    a.download = match?.[1] ?? `vote_receipt_${electionId || "unknown"}.pdf`;
     document.body.appendChild(a);
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
     // Navigate away after starting the download
-    nav("/voter");
+    nav("/voter", { replace: true });
   } catch {
     alert("Download failed.");
   }
@@ -110,7 +100,7 @@ const VoteCompletePage: React.FC = () => {
                 </button>
               <button
                 className="btn btn-primary"
-                onClick={() => nav("/voter")}
+                onClick={() => nav("/voter", { replace: true })}
                 disabled={sending}
               >
                 Back to Dashboard

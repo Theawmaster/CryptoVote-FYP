@@ -8,7 +8,7 @@ DEFAULT_IDLE_TTL_SECS = 2 * 60
 DEFAULT_ABS_TTL_SECS  = 8 * 60 * 60
 
 PUBLIC_PATHS = {
-    "/login", "/admin-login", "/logout/", "/onboarding", "/2fa-verify",
+    "/login", "/admin-login", "/logout/", "/2fa-verify",
     "/public-keys", "/healthz",
     # NOTE: DO NOT put /session/status here (we want 401 when expired)
 }

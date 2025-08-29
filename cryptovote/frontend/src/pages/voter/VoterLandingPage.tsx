@@ -6,6 +6,7 @@ import LastLoginBadge from '../../components/voter/LastLoginBadge';
 import VoterRightSidebar from '../../components/voter/VoterRightSidebar';
 import { useCredential } from '../../ctx/CredentialContext';
 import { genToken, blindToken, unblindSignature, RsaPub } from '../../lib/cred';
+import { useBackForwardLock } from '../../hooks/useBackForwardLock';
 
 async function safeJson(res: Response) {
   try { return await res.json(); } catch { return {}; }
@@ -159,7 +160,7 @@ const VoterLandingPage: React.FC = () => {
       const credObj = { electionId, token, signatureHex, rsaKeyId };
       setCred(credObj);
       try { sessionStorage.setItem('ephemeral_cred', JSON.stringify(credObj)); } catch {}
-      nav(`/voter/elections/${electionId}`, { state: { cred: credObj } });
+      nav(`/voter/elections/${electionId}`, { state: { cred: credObj }, replace: true });
     } catch (e: any) {
       setErr(e.message || 'Failed to prepare credential');
     } finally {
@@ -215,6 +216,11 @@ const VoterLandingPage: React.FC = () => {
     setInputInvalid(false);
     if (!resLoading) fetchResults(lookupId.trim());
   }
+
+    useBackForwardLock({
+    enabled: true,
+    onAttempt: () => showToast('info', 'Use the in-app navigation or Logout to leave.'),
+  });
 
   return (
     <div className="voter-landing">

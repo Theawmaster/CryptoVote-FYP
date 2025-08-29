@@ -1,10 +1,17 @@
 // src/pages/voter/VoterBallotPage.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useEnsureVoter } from "../../hooks/useAuthGuard";
 import { useCredential } from "../../ctx/CredentialContext";
+import { useBackForwardLock } from '../../hooks/useBackForwardLock';
 import VoterRightSidebar from "../../components/voter/VoterRightSidebar";
 import ConfirmationModal from "../../components/auth/ConfirmationModal";
+import ConfirmLeaveModal from '../../components/auth/ConfirmLeaveModal';
+
+import { E2EE_ENABLED } from "../../config/flags";
+import { fetchPaillierKey } from "../../services/paillier";
+import { paillierEncryptBitToDecString } from "../../crypto/paillier";
+
 import "../../styles/voter-landing.css";
 
 type Candidate = { id: string; name: string };
@@ -40,6 +47,12 @@ const VoterBallotPage: React.FC = () => {
 
   const [showBackConfirm, setShowBackConfirm] = useState(false);
 
+  const [showConfirm, setShowConfirm] = useState(false);
+  const onAttempt = useCallback(() => setShowConfirm(true), []);
+
+  const [nDec, setNDec] = useState<string | null>(null); // Paillier n (decimal)
+  const [keyId, setKeyId] = useState<string | null>(null); // Paillier key id
+
   // ---------- hydrate cred from nav state / sessionStorage ----------
   useEffect(() => {
     if (!cred && location?.state?.cred) {
@@ -73,6 +86,17 @@ const VoterBallotPage: React.FC = () => {
         const j = await safeJson(r);
         if (!r.ok) throw new Error(j.error || "Failed to load election");
         if (alive) setDetail(j);
+        // fetch Paillier key only if flag is on
+        if (E2EE_ENABLED) {
+          try {
+            const k = await fetchPaillierKey();
+            // convert hex -> decimal string
+            const n = BigInt("0x" + k.nHex).toString(10);
+            if (alive) { setNDec(n); setKeyId(k.key_id); }
+          } catch (e) {
+            console.warn("[E2EE] could not fetch Paillier key; will fall back:", e);
+          }
+        }
       } catch (e: any) {
         if (alive) setErr(e.message || "Failed to load election");
       } finally {
@@ -109,12 +133,33 @@ const VoterBallotPage: React.FC = () => {
       setSubmitting(true);
       setErr(null);
 
-      const body = {
+      const legacyBody = {
         election_id: electionId,
         candidate_id: selected,
         token: cred.token,
         signature: cred.signatureHex,
       };
+
+      // Try to build E2EE ballot (one-hot) if enabled and key present
+      let ballot: any | undefined = undefined;
+      if (E2EE_ENABLED && nDec && keyId && detail) {
+        try {
+          const entries = detail.candidates.map(c => {
+            const bit: 0|1 = (c.id === selected ? 1 : 0);
+            const ciph = paillierEncryptBitToDecString(bit, nDec);
+            return { candidate_id: c.id, c: ciph };
+          });
+          ballot = { scheme: "paillier-1hot", exponent: 0, key_id: keyId, entries };
+          // Optional: console.debug("[E2EE] built ballot:", ballot);
+        } catch (e) {
+          console.warn("[E2EE] encryption failed; falling back to legacy:", e);
+          ballot = undefined;
+        }
+      }
+
+      const body = ballot
+      ? { election_id: electionId, token: cred.token, signature: cred.signatureHex, ballot }
+      : { election_id: electionId, candidate_id: selected, token: cred.token, signature: cred.signatureHex };
 
       const r = await fetch("/cast-vote", {
         method: "POST",
@@ -140,9 +185,27 @@ const VoterBallotPage: React.FC = () => {
     }
   }
 
+
+  //  enable lock while on ballot; set to false after successful submit
+  useBackForwardLock({
+    enabled: true,
+    onAttempt,
+    beforeUnloadMessage: 'You have an in-progress ballot. Leave?',
+  });
+
+  const stay = () => setShowConfirm(false);
+
+  // If you want to FORCE logout when leaving mid-ballot:
+  const leave = async () => {
+    try { await fetch('/logout/', { method: 'POST', credentials: 'include' }); } catch {}
+    nav('/auth', { replace: true });
+  };
+
+
   // ---------- render ----------
   return (
     <div className="voter-landing">
+      <ConfirmLeaveModal open={showConfirm} onStay={stay} onLeave={leave} />
       <main className="vl-main">
         {/* LEFT column */}
         <section className="vl-left">
