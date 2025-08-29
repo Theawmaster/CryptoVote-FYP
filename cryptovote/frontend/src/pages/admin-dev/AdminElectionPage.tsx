@@ -74,7 +74,7 @@ const AdminElectionPage: React.FC = () => {
       <LeftSidebar title="Election Management" />
       <main className="right-panel">
         <header className="mgr-header">
-          <button className="mgr-btn-ghost" onClick={() => navigate(-1)}>← Back</button>
+          <button className="mgr-btn-ghost" onClick={() => navigate('/admin/landing')}>← Back</button>
           <h2 className="mgr-header__title">{status?.name ?? 'Election'}</h2>
           {!!status && <span className={['mgr-chip', chipClass].join(' ')}>{prettyState(status)}</span>}
         </header>

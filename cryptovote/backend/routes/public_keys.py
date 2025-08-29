@@ -4,6 +4,7 @@ import hashlib
 
 from utilities.blind_signature_utils import load_public_key as load_rsa_public_key
 from utilities.paillier_utils import load_public_key as load_paillier_public_key
+from utilities.key_fingerprint import fingerprint_paillier_n
 
 keys_bp = Blueprint("keys", __name__)
 
@@ -60,7 +61,7 @@ def get_public_keys():
         ppk = load_paillier_public_key()
         n = int(ppk.n)
         out["paillier"] = {
-            "key_id": f"paillier-{_fingerprint('paillier', n)}",
+            "key_id": fingerprint_paillier_n(n),
             "nHex": hex(n)[2:],
             "bits": n.bit_length(),
         }

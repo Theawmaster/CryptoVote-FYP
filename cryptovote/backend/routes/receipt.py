@@ -3,7 +3,6 @@ import os
 from flask import Blueprint, request, make_response
 from datetime import datetime
 from _zoneinfo import ZoneInfo
-import secrets
 
 SGT = ZoneInfo("Asia/Singapore")
 receipt_bp = Blueprint("receipt", __name__)
@@ -27,7 +26,6 @@ def vote_receipt():
     election_name = request.args.get("election_name", "Election")
     election_id = request.args.get("election_id")
     ts = datetime.now(SGT).strftime("%d %b %Y, %H:%M %Z")
-    support_ref = secrets.token_hex(6)
 
     if HAVE_PDF:
         from io import BytesIO
@@ -69,7 +67,7 @@ def vote_receipt():
         # --- body ---
         c.setFont("Helvetica", 12)
         c.drawString(margin, y, f"Timestamp: {ts}"); y -= 18
-        c.drawString(margin, y, f"Support Ref: {support_ref}"); y -= 24
+        c.drawString(margin, y, f"Election ID: {election_id}"); y -= 24
 
         c.setFont("Helvetica-Oblique", 11)
         c.drawString(margin, y, "This receipt contains no voting choices and cannot be used to prove how you voted."); y -= 18
@@ -83,18 +81,17 @@ def vote_receipt():
 
         resp = make_response(pdf_bytes)
         resp.headers["Content-Type"] = "application/pdf"
-        resp.headers["Content-Disposition"] = f'attachment; filename="vote_receipt_{support_ref}.pdf"'
+        resp.headers["Content-Disposition"] = f'attachment; filename="vote_receipt_{election_id}.pdf"'
         return resp
 
     # fallback plain text
     text = (
         f"Vote receipt — {election_name}\n"
-        f"Election ID: {election_id}\n"
         f"Timestamp: {ts}\n"
-        f"Support Ref: {support_ref}\n"
+        f"Election ID: {election_id}\n"
         f"This receipt contains no voting choices and cannot be used to prove how you voted.\n"
     )
     resp = make_response(text)
     resp.headers["Content-Type"] = "text/plain; charset=utf-8"
-    resp.headers["Content-Disposition"] = f'attachment; filename="vote_receipt_{support_ref}.txt"'
+    resp.headers["Content-Disposition"] = f'attachment; filename="vote_receipt_{election_id}.txt"'
     return resp
