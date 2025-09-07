@@ -35,6 +35,7 @@ const LogoutButton: React.FC<{ onLogoutSuccess?: () => void }> = ({ onLogoutSucc
       // Give the toast a moment, then navigate
       setTimeout(() => {
         navigate('/auth/admin', { replace: true });
+        sessionStorage.removeItem('seen_timeout_notice');
       }, 600);
     } catch (e) {
       showToast('error', 'Error logging out');

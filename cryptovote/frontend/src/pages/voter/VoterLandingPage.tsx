@@ -1,6 +1,6 @@
 // src/pages/voter/VoterLandingPage.tsx
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import '../../styles/voter-landing.css';
 
 import { useEnsureVoter } from '../../hooks/useAuthGuard';
@@ -14,6 +14,7 @@ import { useBackForwardLock } from '../../hooks/useBackForwardLock';
 import LastLoginBadge from '../../components/voter/LastLoginBadge';
 import VoterRightSidebar from '../../components/voter/VoterRightSidebar';
 import ElectionCard from '../../components/voter/ElectionCard';
+import ConfirmationModal from '../../components/auth/ConfirmationModal';
 
 import { getRsaPub } from '../../services/voter/keys';
 import { downloadJson } from '../../services/voter/http';
@@ -31,6 +32,7 @@ async function safeJson(res: Response) {
 
 const VoterLandingPage: React.FC = () => {
   const nav = useNavigate();
+  const loc = useLocation() as { state?: { justLoggedIn?: boolean } };
   useEnsureVoter();
   const me = useVoterMe();
   const { setCred } = useCredential();
@@ -54,6 +56,8 @@ const VoterLandingPage: React.FC = () => {
   const [wbbIndex, setWbbIndex] = useState<number | null>(null);
   const [wbbRoot, setWbbRoot] = useState<string | null>(null);
   const [wbbCount, setWbbCount] = useState<number | null>(null);
+
+  const [showTimeoutNotice, setShowTimeoutNotice] = useState(false);
 
   // initial load
   useEffect(() => {
@@ -119,6 +123,30 @@ const VoterLandingPage: React.FC = () => {
     }
   }
 
+  useEffect(() => {
+    const fromLogin =
+      !!loc.state?.justLoggedIn || sessionStorage.getItem('justLoggedIn') === '1';
+    let alreadyShown = sessionStorage.getItem('seen_timeout_notice') === '0';
+
+    if (fromLogin && !alreadyShown) {
+      setShowTimeoutNotice(true);
+      alreadyShown = sessionStorage.getItem('seen_timeout_notice') === '1';
+    }
+
+    // clear the one-time flags so refresh/back doesn't re-trigger
+    if (loc.state?.justLoggedIn) {
+      nav('.', { replace: true, state: {} }); // wipe history state
+    }
+    sessionStorage.removeItem('justLoggedIn');
+  }, [loc.state, nav]);
+
+
+  // Acknowledge timeout notice
+  function acknowledgeTimeoutNotice() {
+  sessionStorage.setItem('seen_timeout_notice', '1');
+  setShowTimeoutNotice(false);
+}
+
   // --- WBB verify handler (uses new /proof shape) ---
   async function verifyOnWBB(e: React.FormEvent) {
     e.preventDefault();
@@ -167,6 +195,13 @@ const VoterLandingPage: React.FC = () => {
   return (
     <div className="voter-landing">
       <main className="vl-main">
+
+      <ConfirmationModal
+          isOpen={showTimeoutNotice}
+          title="Session timeout"
+          message="You will be logged out after 2 minutes of inactivity."
+          onConfirm={acknowledgeTimeoutNotice} onCancel={acknowledgeTimeoutNotice}      />
+
         {toast && (
           <div className={`toast ${toast.type}`} role="alert" aria-live="assertive">
             {toast.msg}

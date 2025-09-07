@@ -89,7 +89,8 @@ const LoginForm: React.FC = () => {
         showToast,
         () => {
           try { sessionStorage.removeItem('voter.email'); } catch {}
-          navigate('/voter', { replace: true });
+          sessionStorage.setItem('justLoggedIn', '1');
+          navigate('/voter', { replace: true, state: { justLoggedIn: true } });
           console.log('OTP ok → route user');
         },
         controller.signal
