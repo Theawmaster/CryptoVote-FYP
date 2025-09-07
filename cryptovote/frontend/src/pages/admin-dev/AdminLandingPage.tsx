@@ -103,7 +103,7 @@ export default function AdminLandingPage() {
               setShowCreate(true);
               setTimeout(() => document.getElementById('create-election-anchor')?.scrollIntoView({ behavior: 'smooth' }), 0);
             }}>
-              <div className="create-card">+ Create new</div>
+              <div className="create-card">+ Create New</div>
             </div>
 
             {showCreate && (
