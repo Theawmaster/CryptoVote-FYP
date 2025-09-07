@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 from utilities.network_utils import is_ntu_ip
 from routes.receipt import receipt_bp
 from routes.results import results_bp
+from routes.wbb import wbb_bp
 from utilities.session_utils import register_session_ttl
 from flask_cors import CORS 
 import os
@@ -72,6 +73,7 @@ app.register_blueprint(candidate_list_bp, url_prefix="/voter")
 app.register_blueprint(receipt_bp)
 app.register_blueprint(results_bp)
 app.register_blueprint(keys_bp)
+app.register_blueprint(wbb_bp)
 register_session_ttl(app, idle_ttl=2*60, abs_ttl=8*60*60)
 
 # IP Restriction Middleware

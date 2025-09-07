@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useMemo, useState } from "react";
 
 export type Cred = {
+  tracker: any;
   electionId: string;
   token: string;
   signatureHex: string;

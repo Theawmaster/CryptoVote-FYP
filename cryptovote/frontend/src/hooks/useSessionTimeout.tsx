@@ -14,6 +14,11 @@ const PING_URL   = "/session/ping";
 const LOGOUT_URL = "/logout/";
 const LOGIN_PATH = "/auth";
 
+function onAuthPage() {
+  const p = window.location.pathname || "";
+  return p === "/auth" || p.startsWith("/auth/");
+}
+
 export function useSessionTimeout() {
   // ---- singleton per window (prevents StrictMode/HMR double-mount spam) ----
   const isPrimary = useRef(false);
@@ -31,6 +36,8 @@ export function useSessionTimeout() {
   const redirectingRef = useRef(false);
   const abortCtrlRef = useRef<AbortController | null>(null);
 
+  const suppressed = onAuthPage();
+
   function clearTimers() {
     if (pollTimer.current) window.clearTimeout(pollTimer.current);
     if (warnTimer.current) window.clearTimeout(warnTimer.current);
@@ -45,6 +52,7 @@ export function useSessionTimeout() {
 
   async function fetchStatus(): Promise<Status | null> {
     if (!isPrimary.current || redirectingRef.current) return null;
+    if (suppressed) return null;
     clearAbort();
     const ctrl = new AbortController();
     abortCtrlRef.current = ctrl;

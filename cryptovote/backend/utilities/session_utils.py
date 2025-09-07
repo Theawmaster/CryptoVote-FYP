@@ -14,7 +14,7 @@ PUBLIC_PATHS = {
 }
 
 # Endpoints that must NOT roll idle
-NO_IDLE_TOUCH = { "/session/status" }
+NO_IDLE_TOUCH = { "/session/status", "/auth/voter", "/auth/admin", "/onboarding" }
 
 # Header to mark background polls (won’t roll idle)
 BACKGROUND_POLL_HEADER = "X-Background-Poll"

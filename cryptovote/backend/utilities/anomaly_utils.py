@@ -45,3 +45,4 @@ def failed_logins_last_10min(ip: str) -> int:
 def too_many_failed_logins(ip: str, threshold: int = 5) -> bool:
     """Convenience gate for rate-limiting/auth throttling."""
     return failed_logins_last_10min(ip) >= threshold
+
