@@ -1,4 +1,5 @@
 from datetime import timedelta
+from extensions import limiter
 from flask import Flask, request, jsonify
 from models.db import db  # use from models.db
 from routes.register import register_bp
@@ -35,15 +36,20 @@ app = Flask(__name__, template_folder=TEMPLATES_DIR)
 app.config.from_pyfile("config.py")
 app.secret_key = os.getenv("SECRET_KEY")
 
-
+# init limiter
+limiter.init_app(app)
 
 is_dev = app.debug or os.getenv("FLASK_ENV") == "development"
 
 app.config.update(
+    SECRET_KEY=os.getenv("FLASK_SECRET_KEY", "dev-not-for-prod"),
+    SESSION_COOKIE_NAME="cryptovote_sess",
     SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_SAMESITE = 'Lax' if is_dev else 'None',
-    SESSION_COOKIE_SECURE = not is_dev,             # False in dev (HTTP), True in prod (HTTPS)
+    SESSION_COOKIE_SECURE=False,   # True only behind HTTPS
+    SESSION_COOKIE_SAMESITE="Lax", # use a dev proxy so Lax works
+    PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
 )
+
 
 CORS(
     app,
@@ -90,6 +96,17 @@ def restrict_to_ntu_wifi():
             "error": "Access restricted to NTU WiFi only.",
             "your_ip": client_ip
         }), 403
+
+# --- Health endpoint (good for demo) ---
+@app.get("/healthz")
+@limiter.exempt                        # never throttle health
+def healthz():
+    return {"ok": True, "service": "cryptovote"}
+
+# --- Nice JSON for rate-limit blocks (demo will show 429s) ---
+@app.errorhandler(429)
+def handle_ratelimit(e):
+    return jsonify(error="Too Many Requests", detail=str(e.description)), 429
 
 # DB Table Creation
 with app.app_context():

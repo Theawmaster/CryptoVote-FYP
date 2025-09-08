@@ -14,6 +14,7 @@ const LoginForm: React.FC = () => {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [otpStage, setOtpStage] = useState(false);
+  const [waitSecs, setWaitSecs] = useState<number>(0);
 
   const navigate = useNavigate(); 
 
@@ -22,6 +23,17 @@ const LoginForm: React.FC = () => {
     setToast({ type, msg });
     window.clearTimeout((showToast as any)._t);
     (showToast as any)._t = window.setTimeout(() => setToast(null), ms);
+  };
+
+  const startCooldown = (secs: number) => {
+    const s = Math.max(1, Math.min(secs || 5, 60)); // clamp 1..60s, default 5
+    setWaitSecs(s);
+    const id = window.setInterval(() => {
+      setWaitSecs(prev => {
+        if (prev <= 1) { window.clearInterval(id); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
   };
 
   const emailRef = useRef<HTMLInputElement | null>(null);
@@ -57,6 +69,7 @@ const LoginForm: React.FC = () => {
       emailRef.current?.focus();
       return;
     }
+    if (waitSecs > 0) return;
     setLoading(true);
     const controller = new AbortController();
     abortRef.current = controller;
@@ -65,8 +78,14 @@ const LoginForm: React.FC = () => {
       await handleLogin(email, showToast, setOtpStage, controller.signal);
       setTimeout(() => otpRef.current?.focus(), 0);
     } catch (e: any) {
-      showToast('error', e?.message || 'Unexpected error during login.');
-      console.error('[voter] login error:', e?._data || e?._raw || e);
+      if (e?.code === 'RATE_LIMIT') {
+        const secs = Number(e?.retryAfter ?? 5);
+        startCooldown(secs);
+        showToast('info', `Too many requests. Please wait ${secs}s and try again.`);
+      } else {
+        showToast('error', e?.message || 'Unexpected error during login.');
+      }
+      console.error('[voter] login error:', e);
     } finally {
       setLoading(false);
     }
@@ -78,6 +97,7 @@ const LoginForm: React.FC = () => {
       otpRef.current?.focus();
       return;
     }
+    if (waitSecs > 0) return;
     setLoading(true);
     const controller = new AbortController();
     abortRef.current = controller;
@@ -91,13 +111,18 @@ const LoginForm: React.FC = () => {
           try { sessionStorage.removeItem('voter.email'); } catch {}
           sessionStorage.setItem('justLoggedIn', '1');
           navigate('/voter', { replace: true, state: { justLoggedIn: true } });
-          console.log('OTP ok → route user');
         },
         controller.signal
       );
     } catch (e: any) {
-      showToast('error', e?.message || 'OTP verification failed.');
-      console.error('[voter] otp error:', e?._data || e?._raw || e);
+      if (e?.code === 'RATE_LIMIT') {
+        const secs = Number(e?.retryAfter ?? 5);
+        startCooldown(secs);
+        showToast('info', `Too many requests. Please wait ${secs}s and try again.`);
+      } else {
+        showToast('error', e?.message || 'OTP verification failed.');
+      }
+      console.error('[voter] otp error:', e);
     } finally {
       setLoading(false);
     }

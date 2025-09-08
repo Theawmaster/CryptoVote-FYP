@@ -60,7 +60,6 @@ export async function handleLogin(
     body: JSON.stringify({ email, signed_nonce }),
     signal,
   });
-
-  showToast('success', 'Signature verified. Please enter OTP.');
   setOtpStage(true);
+  showToast('success', 'Signature verified. Please enter OTP.');
 }
