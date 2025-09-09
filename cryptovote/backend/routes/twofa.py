@@ -1,4 +1,5 @@
 # twofa.py
+from extensions import limiter
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from flask import Blueprint, request, jsonify, session, current_app   # ← add current_app
@@ -13,6 +14,7 @@ otp_cooldown = {}  # dict[tuple[str, str], datetime]
 SGT = ZoneInfo("Asia/Singapore")
 
 @otp_bp.route('/2fa-verify', methods=['POST'])
+@limiter.limit("3 per second; 30 per minute")
 def verify_2fa():
     data = request.get_json() or {}
     email = data.get('email')                  # optional sanity only

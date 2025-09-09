@@ -1,4 +1,8 @@
 from flask import Blueprint, request, jsonify, session
+from utilities.network_utils import get_client_ip
+from extensions import limiter
+from utilities.http_utils import too_many
+from utilities.rate_limit_utils import allow, too_many
 from services.auth_service import get_email_hash, request_nonce, validate_nonce, clear_nonce
 from services.registration_service import verify_voter_signature
 from utilities.anomaly_utils import flag_suspicious_activity, failed_logins_last_10min
@@ -53,11 +57,17 @@ def _finish_signature_phase(email: str, signed_nonce: str | None):
     return None, None  # caller continues
 
 
+
 @auth_bp.route('/login', methods=['POST'])
+@limiter.limit("5 per second; 60 per minute")
 def login():
     data = request.get_json(silent=True) or {}
     email = data.get('email')
     signed_nonce = data.get('signed_nonce')
+    
+    # enforce rate limit: 5 attempts per 30s
+    if not allow(get_client_ip(), key=email, max_attempts=5, window_secs=30):
+        return too_many("Too many login attempts", retry_secs=30)
 
     # Step 1: signature phase (issue nonce or verify)
     res, code = _finish_signature_phase(email, signed_nonce)

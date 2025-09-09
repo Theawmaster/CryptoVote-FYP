@@ -5,8 +5,10 @@ import os
 
 # Define NTU's trusted IP range(s)
 NTU_IP_RANGES = [
-    ipaddress.ip_network("155.69.191.0/24"),  # NTU public block
-    ipaddress.ip_network("10.0.0.0/8")       # NTU private network block
+    # ipaddress.ip_network("155.69.191.0/24"),  # NTU public block
+    # ipaddress.ip_network("119.74.224.147"),  # Home public block
+    # ipaddress.ip_network("10.0.0.0/8")       # NTU private network block
+    ipaddress.ip_network("127.0.0.1")
 ]
 
 def is_ntu_ip(ip):
@@ -36,3 +38,12 @@ def ntu_wifi_only(f):
 
         return f(*args, **kwargs)
     return wrapper
+
+def get_client_ip() -> str:
+    # Works locally and behind reverse proxies/CDN
+    return (
+        request.headers.get("CF-Connecting-IP")
+        or (request.access_route[0] if request.access_route else None)
+        or request.remote_addr
+        or "unknown"
+    )

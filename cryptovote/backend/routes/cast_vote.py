@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify, session
+from extensions import limiter
 from datetime import datetime
 import hashlib, re, json
 from zoneinfo import ZoneInfo
@@ -23,6 +24,7 @@ SGT = ZoneInfo("Asia/Singapore")
 cast_vote_bp = Blueprint("cast_vote", __name__)
 
 @cast_vote_bp.route("/cast-vote", methods=["POST"])
+@limiter.limit("2 per second; 20 per minute")
 def cast_vote():
     # 0) session auth
     email_hash = session.get("email")
