@@ -106,7 +106,7 @@ def voter_receipt():
             y -= 24
 
             c.setFont("Helvetica-Oblique", 11)
-            c.drawString(margin, y, "Use this tracker to verify your ballot is posted on the bulletin board.")
+            c.drawString(margin, y, "Use this tracker to verify your entry is posted on the bulletin board.")
             y -= 18
             c.setFont("Helvetica", 12)
 
@@ -123,6 +123,10 @@ def voter_receipt():
         resp.headers["Content-Type"] = "application/pdf"
         safe_id = "".join(ch for ch in election_id if ch.isalnum() or ch in ("-", "_")) or "election"
         resp.headers["Content-Disposition"] = f'attachment; filename="vote_receipt_{safe_id}.pdf"'
+        resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0, private"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+        resp.headers["Referrer-Policy"] = "no-referrer"
         return resp
 
     # -------- plain-text fallback --------
@@ -133,7 +137,7 @@ def voter_receipt():
     ]
     if tracker:
         lines.append(f"Tracker: {tracker}")
-        lines.append("Use this tracker to verify your ballot is posted on the bulletin board.")
+        lines.append("Use this tracker to verify your entry is posted on the bulletin board.")
     lines.append("This receipt contains no voting choices and cannot be used to prove how you voted.")
     text = "\n".join(lines) + "\n"
 

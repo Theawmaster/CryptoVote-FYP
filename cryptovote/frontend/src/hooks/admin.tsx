@@ -22,12 +22,26 @@ export function useElections() {
   useEffect(() => {
     const c = new AbortController();
     abortRef.current = c;
+
     (async () => {
-      setLoading(true); setErr(null);
-      try { setData((await apiGet<{elections: Election[]}>('/admin/elections', { signal: c.signal })).elections || []); }
-      catch (e: any) { if (e.name !== 'AbortError') setErr(e.message || 'Failed to load elections'); }
-      finally { setLoading(false); }
+      setLoading(true);
+      setErr(null);
+      try {
+        const res = await apiGet<{ elections: Election[] }>('/admin/elections', { signal: c.signal });
+        setData(res.elections || []);
+      } catch (e: any) {
+        if (
+          e.name === 'AbortError' ||
+          e.code === 'CANCELLED' ||
+          e.message === 'Request cancelled.'
+        )
+          return; // ignore cancel/abort
+        setErr(e.message || 'Failed to load elections');
+      } finally {
+        setLoading(false);
+      }
     })();
+
     return () => c.abort();
   }, []);
 

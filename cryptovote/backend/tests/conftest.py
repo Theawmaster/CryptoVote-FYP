@@ -2,50 +2,40 @@
 import sys
 from pathlib import Path
 from types import SimpleNamespace as NS
+
 import pytest
 from flask import Flask
 from phe import paillier
 
-# Ensure "backend/" is on sys.path so `routes.cast_vote` imports work
-BACKEND_DIR = Path(__file__).resolve().parents[1]  # .../backend
+# Make sure backend/ is importable
+BACKEND_DIR = Path(__file__).resolve().parents[1]
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
-import routes.cast_vote as cv  # the blueprint under test
-
-
 @pytest.fixture
 def app(monkeypatch):
+    """
+    App fixture for cast-vote E2EE tests:
+    - DO NOT replace the EncryptedCandidateVote class globally.
+    - Patch only the cast_vote route module to use a fake session and crypto stubs.
+    """
     app = Flask(__name__)
     app.config.update(TESTING=True, SECRET_KEY="test-secret")
 
-    # Small key for test speed
+    # small key for speed
     pub, _priv = paillier.generate_paillier_keypair(n_length=256)
 
-    # ---- Stubs the route expects ----
+    # Import inside the fixture so our patches are local to this app
+    import routes.cast_vote as cv
 
-    # Auth: always returns a logged-in voter
+    # --------------------------- Model/Test Stubs ---------------------------
+    # Always-authenticated voter for this route
     class _VoterQ:
         def filter_by(self, **kw): return self
-        def first(self): return NS(id=1, is_verified=True, logged_in=True)
+        def first(self): return NS(id=1, is_verified=True, logged_in=True, logged_in_2fa=True)
     monkeypatch.setattr(cv, "Voter", NS(query=_VoterQ()))
 
-    # EncryptedCandidateVote model stub (capture created rows)
-    class _EncVote:
-        # Class-level attrs used in query expressions:
-        id = object()
-        token_hash = "token_hash"  # sentinel; our .filter stub ignores the expression anyway
-
-        def __init__(self, candidate_id, vote_ciphertext, vote_exponent, token_hash, cast_at, election_id):
-            self.candidate_id = candidate_id
-            self.vote_ciphertext = vote_ciphertext
-            self.vote_exponent = vote_exponent
-            self.token_hash = token_hash
-            self.cast_at = cast_at
-            self.election_id = election_id
-    monkeypatch.setattr(cv, "EncryptedCandidateVote", _EncVote)
-
-    # VES (double-vote guard) stub
+    # VES (double-vote guard)
     class _VESQ:
         def filter_by(self, **kw): return self
         def first(self): return None
@@ -58,9 +48,33 @@ def app(monkeypatch):
         query = _VESQ()
     monkeypatch.setattr(cv, "VES", _VES)
 
-    # DB session stub with two query shapes: candidates + token reuse
+    # Minimal candidates / election models the route touches
+    class _Candidate:
+        id = object()
+        election_id = object()
+    monkeypatch.setattr(cv, "Candidate", _Candidate)
+
+    class _Election: ...
+    monkeypatch.setattr(cv, "Election", _Election)
+
+    class _PosAttr:
+        def desc(self): return self
+    class _WbbEntry:
+        position = _PosAttr()
+        def __init__(self, election_id, tracker, token_hash, position, leaf_hash, commitment_hash):
+            self.election_id = election_id
+            self.tracker = tracker
+            self.token_hash = token_hash
+            self.position = position
+            self.leaf_hash = leaf_hash
+            self.commitment_hash = commitment_hash
+    monkeypatch.setattr(cv, "WbbEntry", _WbbEntry)
+
+    # --------------------------- Fake DB Session ---------------------------
     class _Sess:
-        def __init__(self): self._adds = []
+        def __init__(self):
+            self._adds = []
+
         def get(self, Model, election_id):
             if Model is cv.Election:
                 return NS(
@@ -71,37 +85,49 @@ def app(monkeypatch):
                     has_ended=False,
                 )
             return None
-        def query(self, what):
-            cand_id_attr    = getattr(cv.Candidate, "id", object())
-            encvote_id_attr = getattr(cv.EncryptedCandidateVote, "id", object())
+
+        def query(self, *entities):
+            what = entities[0] if entities else None
+            cand_id_attr      = getattr(cv.Candidate, "id", None)
+            from models.encrypted_candidate_vote import EncryptedCandidateVote as ECV
+            encvote_id_attr   = getattr(ECV, "id", None)
+            wbb_position_attr = getattr(cv.WbbEntry, "position", None)
+
+            if what is cand_id_attr:
+                mode = "cands"
+            elif what is encvote_id_attr:
+                mode = "encvote_ids"
+            elif what is wbb_position_attr:
+                mode = "wbbpos"
+            else:
+                mode = "other"
 
             class _Q:
-                def __init__(self, mode): self.mode = mode
-                def join(self, *a, **k): return self
-                def filter(self, *a, **k): return self
+                def __init__(self, mode):
+                    self.mode = mode
+                def filter(self, *a, **k):    return self
+                def filter_by(self, **k):     return self
+                def order_by(self, *a, **k):  return self
+                def join(self, *a, **k):      return self
                 def all(self):
-                    if self.mode == "cands":
-                        return [NS(id="c1"), NS(id="c2"), NS(id="c3")]
-                    return []
+                    return [NS(id="c1"), NS(id="c2"), NS(id="c3")] if self.mode == "cands" else []
                 def first(self):
-                    # never signal token reuse in these unit tests
-                    return None
-
-            mode = "cands" if what is cand_id_attr else \
-                   "encvote_ids" if what is encvote_id_attr else "other"
+                    return None  # no reuse; so next WBB position is 0
             return _Q(mode)
-        def add(self, obj): self._adds.append(obj)
+
+        def add(self, obj):
+            self._adds.append(obj)
+
         def commit(self): pass
+
     sess = _Sess()
     monkeypatch.setattr(cv.db, "session", sess)
 
-    # Crypto hooks inside the route
-    monkeypatch.setattr(cv, "parse_and_verify_signature", lambda *a, **k: (True, None, None))
-    monkeypatch.setattr(cv, "load_rsa_pubkey", lambda *a, **k: object())
-    monkeypatch.setattr(cv, "load_paillier_public_key", lambda: pub)
-
-    # 🔑 Keep the E2EE unit test focused on ciphertext storage only
-    monkeypatch.setattr(cv, "mark_voted", lambda *a, **k: None)
+    # ----------------------- Crypto stubs & helpers ------------------------
+    monkeypatch.setattr(cv, "parse_and_verify_signature", lambda *a, **k: (True, None, None), raising=True)
+    monkeypatch.setattr(cv, "load_rsa_pubkey", lambda *a, **k: object(), raising=True)
+    monkeypatch.setattr(cv, "load_paillier_public_key", lambda: pub, raising=True)
+    monkeypatch.setattr(cv, "mark_voted", lambda *a, **k: None, raising=True)
 
     # Register the blueprint and expose captured inserts for assertions
     app.register_blueprint(cv.cast_vote_bp)
@@ -109,15 +135,12 @@ def app(monkeypatch):
     app._added = sess._adds
     return app
 
-
 @pytest.fixture
 def client(app):
     return app.test_client()
 
-
 @pytest.fixture
 def login(client):
-    """Use in tests: call login() before POSTing."""
     def _go():
         with client.session_transaction() as s:
             s["email"] = "unit@test"

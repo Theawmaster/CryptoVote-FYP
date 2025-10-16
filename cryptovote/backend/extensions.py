@@ -8,12 +8,9 @@ def demo_key_func():
     # For demo: let a header override the key so we can "separate" attacker traffic
     return request.headers.get("X-Real-IP") or get_remote_address()
 
-limiter = Limiter(
-    key_func=demo_key_func,
-    storage_uri=os.getenv("REDIS_URL", "redis://localhost:6379/0"),
-    default_limits=["200 per minute"],
-    strategy="moving-window",
-)
+
+storage = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
+limiter = Limiter(get_remote_address, storage_uri=storage)
 
 # Shared buckets for quick, consistent coverage
 # - mutate: POST/PUT/DELETE (session-impacting)
