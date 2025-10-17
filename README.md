@@ -133,5 +133,5 @@ Released under **AGPL-3.0**.
 Developed as an NTU Final Year Project — *CryptoVote* (2025).
 
 **Author:** Alvin Aw Yong  
-📧 [aavyong001@e.ntu.edu.sg](mailto:aavyong001@e.ntu.edu.sg)  
-🔗 [LinkedIn](https://www.linkedin.com/in/alvin-aw-yong-3087591a6)
+[aavyong001@e.ntu.edu.sg](mailto:aavyong001@e.ntu.edu.sg)  
+[LinkedIn](https://www.linkedin.com/in/alvin-aw-yong-3087591a6)
