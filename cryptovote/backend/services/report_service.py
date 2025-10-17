@@ -70,7 +70,7 @@ def _generate_csv_report(election: Election, tally: list[dict], zkp_proofs: list
         w.writerow([cid, cand_map.get(cid, cid), row["vote_count"]])
 
     w.writerow([])
-    w.writerow(["ZKP Proofs"])
+    w.writerow(["Commitment Proofs"])
     w.writerow(["Candidate ID", "Candidate Name", "Count", "Salt", "Commitment"])
     for p in zkp_proofs:
         cid = str(p["candidate_id"])
@@ -120,7 +120,7 @@ def _generate_pdf_report(election: Election, tally: list[dict], zkp_proofs: list
 
     pdf.ln(4)
     pdf.set_font("Arial", "B", 12)
-    pdf.cell(190, 8, txt="ZKP Commitment Proofs:", ln=True)
+    pdf.cell(190, 8, txt="Commitment Proofs:", ln=True)
     pdf.set_font("Arial", "", 10)
 
     for p in zkp_proofs:

@@ -3,6 +3,7 @@ from models.db import db
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+
 SGT = ZoneInfo("Asia/Singapore")
 
 class EncryptedCandidateVote(db.Model):
