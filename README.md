@@ -1,4 +1,4 @@
-# CryptoVote — Cryptographic Electronic Voting System (NTU FYP)
+# CryptoVote: Cryptographic Electronic Voting System (NTU FYP)
 
 **CryptoVote** is a secure, privacy-preserving e-voting prototype developed at **Nanyang Technological University (NTU)**, Singapore.  
 It integrates **blind signatures**, **homomorphic encryption**, and a **public Web Bulletin Board (WBB)** to ensure verifiable and anonymous elections.
