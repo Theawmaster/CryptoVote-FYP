@@ -135,3 +135,6 @@ Developed as an NTU Final Year Project — *CryptoVote* (2025).
 **Author:** Alvin Aw Yong  
 [aavyong001@e.ntu.edu.sg](mailto:aavyong001@e.ntu.edu.sg)  
 [LinkedIn](https://www.linkedin.com/in/alvin-aw-yong-3087591a6)
+
+**Supervisor:** Dr Tay Kian Boon
+[kianboon.tay@staff.main.ntu.edu.sg]
