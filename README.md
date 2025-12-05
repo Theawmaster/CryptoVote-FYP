@@ -3,7 +3,7 @@
 **CryptoVote** is a secure, privacy-preserving e-voting prototype developed at **Nanyang Technological University (NTU)**, Singapore.  
 It integrates **blind signatures**, **homomorphic encryption**, and a **public Web Bulletin Board (WBB)** to ensure verifiable and anonymous elections.
 
-<video src="[https://drive.google.com/file/d/1JBY9HnVzhjMp-Uga7bc76twUY8En92Rp/view?usp=drive_link]" controls width="400"></video>
+[![Video Title]([https://img.youtube.com/vi/VIDEO_ID/0.jpg](https://drive.google.com/file/d/1xKVNYjPTuOVbk-18gg4jjBuFWrS9Vp2Y/view?usp=sharing))](https://drive.google.com/file/d/1JBY9HnVzhjMp-Uga7bc76twUY8En92Rp/view?usp=sharing)
 
 
 > ⚠️ Research prototype for academic purposes — *not intended for national deployments.*
